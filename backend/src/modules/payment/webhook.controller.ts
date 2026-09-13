@@ -14,10 +14,15 @@ import { paymentService } from "./payment.service.js";
 const paymentGateway = new RazorpayGateway();
 
 export const paymentWebhookController = {
+
+  
+
+
   async handleRazorpayWebhook(
     req: Request,
     res: Response,
   ) {
+
     /*
      * --------------------------------------------------
      * 1. Validate raw body
@@ -229,18 +234,20 @@ export const paymentWebhookController = {
      * --------------------------------------------------
      */
 
-    const attempt =
-      await paymentRepository.findAttemptByGatewayOrderId(
-        razorpayOrder.id,
-      );
+   
 
-    if (!attempt) {
-      throw new AppError(
-        ERROR_CODES.PAYMENT_ATTEMPT_NOT_FOUND,
-        "Payment attempt not found",
-        404,
-      );
-    }
+const attempt =
+  await paymentRepository.findAttemptByGatewayOrderId(razorpayOrder.id);
+
+
+
+if (!attempt) {
+  throw new AppError(
+    ERROR_CODES.PAYMENT_ATTEMPT_NOT_FOUND,
+    "Payment attempt not found",
+    404,
+  );
+}
 
     /*
      * --------------------------------------------------

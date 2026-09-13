@@ -1,0 +1,13 @@
+import crypto from "node:crypto";
+
+const secret = "nbhgfreeeeeeeeeeedfvbgtyhjmjhytrferfghnjm";
+
+const rawBody =
+  '{"entity":"event","account_id":"acc_test","event":"order.paid","contains":["order","payment"],"payload":{"order":{"entity":{"id":"order_Tb0mgG13nM4pxL","amount":98000,"currency":"INR","status":"paid"}},"payment":{"entity":{"id":"pay_FAKE_TEST_009","order_id":"order_Tb0mgG13nM4pxL","amount":98000,"status":"captured"}}}}';
+
+const signature = crypto
+  .createHmac("sha256", secret)
+  .update(rawBody)
+  .digest("hex");
+
+console.log(signature);
