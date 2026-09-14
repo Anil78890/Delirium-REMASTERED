@@ -287,4 +287,42 @@ export const refundService = {
             `Unknown gateway refund status: ${gatewayStatus}`,
         );
     },
+
+
+
+    async reconcileProcessingRefunds(
+        gateway: PaymentGateway,
+    ) {
+        const refunds = await refundRepository.findProcessingRefunds();
+
+        for (const refund of refunds) {
+            if(!refund.gatewayRefundId) {
+                continue;
+            }
+
+            try {
+                const gatewayRefund = 
+                     await gateway.fetchRefund(
+                        refund.gatewayRefundId,
+                     );
+
+                this.validateGatewayRefund(
+                    refund,
+                    gatewayRefund,
+                );
+
+                await this.handleGatewayRefundStatus(
+                    refund,
+                    gatewayRefund.status,
+                );
+            } catch(error) {
+                 // One refund failing should not stop
+            // reconciliation of all other refunds.
+            console.error(
+                `Failed to reconcile refund ${refund.id}`,
+                error,
+            );
+            }
+        }
+    }
 };

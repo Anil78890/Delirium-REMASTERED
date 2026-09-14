@@ -102,5 +102,17 @@ export const refundRepository = {
     });
   },
 
- 
+   findProcessingRefunds(db: RefundDb = prisma) {
+    return db.refund.findMany({
+        where: {
+            status: "PROCESSING",
+            gatewayRefundId: {
+                not: null,
+            },
+        },
+        orderBy: {
+            createdAt: "asc",
+        },
+    });
+},
 };
