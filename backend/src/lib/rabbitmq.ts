@@ -11,11 +11,121 @@ import {
 } from "./rabbitmq.constants.js";
 
 import { env } from "../config/env.js";
+import { logger } from "./logger.js";
+
+type RabbitMQRecoveryHandler = () => Promise<void>;
+
+let recoveryHandler: RabbitMQRecoveryHandler | null = null;
+
+export function registerRabbitMQRecoveryHandler(
+    handler: RabbitMQRecoveryHandler,
+): void {
+    recoveryHandler = handler;
+}
+
+
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let reconnectAttempt = 0;
+let isShuttingDown = false;
+
+const INITIAL_RECONNECT_DELAY_MS = 1_000;
+const MAX_RECONNECT_DELAY_MS = 30_000;
 
 let connection: ChannelModel | null = null;
 
 let publisherChannel: ConfirmChannel | null = null;
 let consumerChannel: Channel | null = null;
+
+
+let isRecovering = false;
+
+
+function scheduleReconnect(): void {
+    if (isShuttingDown) {
+        return;
+    }
+
+    if (reconnectTimer) {
+        return;
+    }
+
+    const delay = Math.min(
+        INITIAL_RECONNECT_DELAY_MS *
+            2 ** reconnectAttempt,
+        MAX_RECONNECT_DELAY_MS,
+    );
+
+    reconnectAttempt++;
+
+    logger.warn(
+        {
+            delayMs: delay,
+            attempt: reconnectAttempt,
+        },
+        "Scheduling RabbitMQ reconnect",
+    );
+
+    reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+
+        void reconnectRabbitMQ();
+    }, delay);
+}
+
+
+async function reconnectRabbitMQ(): Promise<void> {
+    if (isShuttingDown || isRecovering) {
+        return;
+    }
+
+    isRecovering = true;
+
+    try {
+        const rabbitMQConnection = await getConnection();
+
+        const newPublisherChannel =
+            await rabbitMQConnection.createConfirmChannel();
+
+        newPublisherChannel.on("error", () => {
+            publisherChannel = null;
+        });
+
+        newPublisherChannel.on("close", () => {
+            publisherChannel = null;
+        });
+
+        publisherChannel = newPublisherChannel;
+
+        await setupRabbitMQTopology(
+            newPublisherChannel,
+        );
+
+        reconnectAttempt = 0;
+
+        logger.info(
+            "RabbitMQ reconnected successfully",
+        );
+
+        if (recoveryHandler) {
+            await recoveryHandler();
+        }
+    } catch (error) {
+        logger.error(
+            {
+                err: error,
+            },
+            "RabbitMQ reconnect attempt failed",
+        );
+
+        connection = null;
+        publisherChannel = null;
+        consumerChannel = null;
+
+        scheduleReconnect();
+    } finally {
+        isRecovering = false;
+    }
+}
 
 async function getConnection(): Promise<ChannelModel> {
     if (connection) {
@@ -24,17 +134,26 @@ async function getConnection(): Promise<ChannelModel> {
 
     connection = await amqp.connect(env.RABBITMQ_URL);
 
-    connection.on("error", () => {
-        connection = null;
-        publisherChannel = null;
-        consumerChannel = null;
-    });
+    connection.on("error", (error) => {
+    logger.error(
+        {
+            err: error,
+        },
+        "RabbitMQ connection error",
+    );
+});
 
-    connection.on("close", () => {
-        connection = null;
-        publisherChannel = null;
-        consumerChannel = null;
-    });
+connection.on("close", () => {
+    connection = null;
+    publisherChannel = null;
+    consumerChannel = null;
+
+    logger.warn(
+        "RabbitMQ connection closed",
+    );
+
+    scheduleReconnect();
+});
 
     return connection;
 }

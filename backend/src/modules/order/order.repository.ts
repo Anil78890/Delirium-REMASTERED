@@ -72,6 +72,72 @@ export const orderRepository = {
         });
     },
 
+   
+findOrdersForAdmin(
+    db: OrderDb = prisma,
+) {
+    return db.order.findMany({
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                },
+            },
+
+            items: true,
+
+            payment: {
+                select: {
+                    id: true,
+                    amountInPaise: true,
+                    status: true,
+                    gateway: true,
+                },
+            },
+        },
+
+        orderBy: {
+            createdAt: "desc",
+        },
+    });
+},
+
+findOrderForAdminById(
+    orderId: string,
+    db: OrderDb = prisma,
+) {
+    return db.order.findUnique({
+        where: {
+            id: orderId,
+        },
+
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                },
+            },
+
+            items: true,
+
+            payment: {
+                select: {
+                    id: true,
+                    amountInPaise: true,
+                    status: true,
+                    gateway: true,
+                },
+            },
+        },
+    });
+},
+
+
+
     updateOrderStatus(
         orderId: string,
         currentStatus: OrderStatus,

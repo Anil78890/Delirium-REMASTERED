@@ -141,6 +141,10 @@ export const orderService = {
             );
         }
 
+
+   
+
+    
         const allowedStatuses =
             allowedOrderStatusTransitions[
                 order.status
@@ -227,6 +231,28 @@ export const orderService = {
             409,
         );
     },
+
+
+   
+getAdminOrders: async () => {
+    return orderRepository.findOrdersForAdmin();
+},
+
+getAdminOrderById: async (orderId: string) => {
+    const order = await orderRepository.findOrderForAdminById(orderId);
+
+    if (!order) {
+        throw new AppError(
+            ERROR_CODES.ORDER_NOT_FOUND,
+            "Order not found",
+            404,
+        );
+    }
+
+    return order;
+},
+
+
 
     async cancelOrder(
     orderId: string,
@@ -346,7 +372,8 @@ export const orderService = {
                     orderId: order.id,
                     amountInPaise: refund.amountInPaise,
                 }
-            }
+            },
+            tx,
         );    
 
         return {

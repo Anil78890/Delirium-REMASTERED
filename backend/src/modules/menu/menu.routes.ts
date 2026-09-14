@@ -75,7 +75,7 @@ router.get(
 );
 
 router.get(
-    "//:id",
+    "/:id",
     requireAuth,
     getMenuItem,
 );

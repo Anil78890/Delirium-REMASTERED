@@ -3,8 +3,11 @@ import app from "./app.js";
 import { env } from "./config/env.js";
 
 import { logger } from "./lib/logger.js";
-import { connectRabbitMQ, setupRabbitMQTopology } from "./lib/rabbitmq.js";
-
+import {
+    connectRabbitMQ,
+    setupRabbitMQTopology,
+    registerRabbitMQRecoveryHandler,
+} from "./lib/rabbitmq.js";
 
 import { startRefundConsumer } from "./modules/payment/refund.consumer.js";
 
@@ -16,6 +19,7 @@ import {
 import {
     startOrderConfirmationConsumer,
 } from "./modules/order/order-confirmation.consumer.js";
+import { startRefundReconciliationWorker } from "./modules/payment/refund.reconciliation.worker.js";
 
 let server: ReturnType<typeof app.listen>;
 
@@ -67,8 +71,16 @@ async function startServer() {
 
         await setupRabbitMQTopology(rabbitMQChannel);
 
+        registerRabbitMQRecoveryHandler(
+    async () => {
         await startOrderConfirmationConsumer();
         await startRefundConsumer();
+    },
+);
+
+        await startOrderConfirmationConsumer();
+        await startRefundConsumer();
+        void startRefundReconciliationWorker();
 
         server = app.listen(env.PORT, () => {
             logger.info(

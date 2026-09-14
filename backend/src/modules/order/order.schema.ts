@@ -13,3 +13,12 @@ export const updateOrderStatusSchema = z.object({
         "CANCELLED",
     ]),
 });
+
+export const cancelOrderSchema = z.object({
+    reason: z
+        .string()
+        .trim()
+        .min(1)
+        .max(500)
+        .optional(),
+});

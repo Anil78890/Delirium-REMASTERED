@@ -1,12 +1,12 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 
 import { orderService } from "./order.service.js";
 import {
     createOrderSchema,
     updateOrderStatusSchema,
 } from "./order.schema.js";
-
 import { getRequiredParam } from "../../lib/requestParams.js";
+
 
 
 export async function createOrder(
@@ -83,3 +83,40 @@ export async function updateOrderStatus(
         },
     });
 }
+
+
+export const getAdminOrders = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) => {
+    try {
+        const orders = await orderService.getAdminOrders();
+
+        res.status(200).json({
+            success: true,
+            data: orders,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getAdminOrderById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) => {
+    try {
+        const orderId = getRequiredParam(req.params.id, "id");
+
+        const order = await orderService.getAdminOrderById(orderId);
+
+        res.status(200).json({
+            success: true,
+            data: order,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
