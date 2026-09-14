@@ -4,7 +4,10 @@ import { env } from "../../config/env.js";
 import type {
   CreateGatewayOrderInput,
   CreateGatewayOrderResult,
+  CreateGatewayRefundInput,
+  CreateGatewayRefundResult,
   FetchGatewayPaymentResult,
+  FetchGatewayRefundResult,
   PaymentGateway,
   VerifyPaymentSignatureInput,
   VerifyWebhookSignatureInput,
@@ -83,4 +86,80 @@ export class RazorpayGateway implements PaymentGateway {
       status: payment.status,
     };
   }
+
+
+  async createRefund(
+  input: CreateGatewayRefundInput,
+): Promise<CreateGatewayRefundResult> {
+  const credentials = Buffer.from(
+    `${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`,
+  ).toString("base64");
+
+  const response = await fetch(
+    `https://api.razorpay.com/v1/payments/${input.gatewayPaymentId}/refund`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        "Content-Type": "application/json",
+        "X-Refund-Idempotency": input.idempotencyKey,
+      },
+      body: JSON.stringify({
+        amount: input.amountInPaise,
+        receipt: input.receipt,
+      }),
+    },
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      `Razorpay refund failed: ${response.status} ${JSON.stringify(data)}`,
+    );
+  }
+
+  return {
+    gatewayRefundId: data.id,
+    gatewayPaymentId: data.payment_id,
+    amountInPaise: Number(data.amount),
+    currency: data.currency,
+    status: data.status,
+  };
+}
+
+   async fetchRefund(
+    gatewayRefundId: string,
+): Promise<FetchGatewayRefundResult> {
+
+    const credentials = Buffer.from(
+        `${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`,
+    ).toString("base64");
+
+    const response = await fetch(
+        `https://api.razorpay.com/v1/refunds/${gatewayRefundId}`,
+        {
+            method: "GET",
+            headers: {
+                Authorization: `Basic ${credentials}`,
+            },
+        },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            `Razorpay refund fetch failed: ${response.status} ${JSON.stringify(data)}`,
+        );
+    }
+
+    return {
+        gatewayRefundId: data.id,
+        gatewayPaymentId: data.payment_id,
+        amountInPaise: Number(data.amount),
+        currency: data.currency,
+        status: data.status,
+    };
+}
 }

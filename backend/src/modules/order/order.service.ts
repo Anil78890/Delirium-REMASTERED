@@ -1,4 +1,8 @@
 import { prisma } from "../../lib/prisma.js";
+import crypto from "node:crypto";
+
+import { paymentRepository } from "../payment/payment.repository.js";
+import { refundRepository } from "../payment/refund.repository.js";
 
 import { AppError } from "../../errors/AppError.js";
 import { ERROR_CODES } from "../../errors/errorCodes.js";
@@ -11,13 +15,11 @@ import {
 } from "./order.types.js";
 
 import type { OrderStatus } from "../../generated/prisma/client.js";
-
+import { outboxRepository } from "../payment/outbox.repository.js";
 
 export const orderService = {
-
     async createOrder(userId: string) {
         return prisma.$transaction(async (tx) => {
-
             const cart =
                 await cartRepository.findCartForCheckout(
                     userId,
@@ -54,7 +56,8 @@ export const orderService = {
                 }
 
                 const itemTotal =
-                    menuItem.priceInPaise * cartItem.quantity;
+                    menuItem.priceInPaise *
+                    cartItem.quantity;
 
                 subtotalInPaise += itemTotal;
 
@@ -62,19 +65,21 @@ export const orderService = {
                     menuItemId: menuItem.id,
                     name: menuItem.name,
                     quantity: cartItem.quantity,
-                    unitPriceInPaise: menuItem.priceInPaise,
+                    unitPriceInPaise:
+                        menuItem.priceInPaise,
                 };
             });
 
-            const order = await orderRepository.createOrder(
-                {
-                    userId,
-                    subtotalInPaise,
-                    totalInPaise: subtotalInPaise,
-                    items,
-                },
-                tx,
-            );
+            const order =
+                await orderRepository.createOrder(
+                    {
+                        userId,
+                        subtotalInPaise,
+                        totalInPaise: subtotalInPaise,
+                        items,
+                    },
+                    tx,
+                );
 
             await cartRepository.clearCart(
                 cart.id,
@@ -85,18 +90,20 @@ export const orderService = {
         });
     },
 
-
     async getOrders(userId: string) {
-        return orderRepository.findOrdersByUserId(userId);
+        return orderRepository.findOrdersByUserId(
+            userId,
+        );
     },
-
 
     async getOrderById(
         userId: string,
         orderId: string,
     ) {
         const order =
-            await orderRepository.findOrderById(orderId);
+            await orderRepository.findOrderById(
+                orderId,
+            );
 
         if (!order) {
             throw new AppError(
@@ -118,99 +125,237 @@ export const orderService = {
     },
 
     async updateOrderStatus(
-    orderId: string,
-    newStatus: OrderStatus,
-) {
-    const order =
-        await orderRepository.findOrderById(orderId);
+        orderId: string,
+        newStatus: OrderStatus,
+    ) {
+        const order =
+            await orderRepository.findOrderById(
+                orderId,
+            );
 
-    if (!order) {
-        throw new AppError(
-            ERROR_CODES.ORDER_NOT_FOUND,
-            "Order not found",
-            404,
-        );
-    }
+        if (!order) {
+            throw new AppError(
+                ERROR_CODES.ORDER_NOT_FOUND,
+                "Order not found",
+                404,
+            );
+        }
 
-    const allowedStatuses =
-        allowedOrderStatusTransitions[order.status];
+        const allowedStatuses =
+            allowedOrderStatusTransitions[
+                order.status
+            ];
 
-    if (!allowedStatuses.includes(newStatus)) {
+        if (!allowedStatuses.includes(newStatus)) {
+            throw new AppError(
+                ERROR_CODES.CONFLICT,
+                `Order cannot transition from ${order.status} to ${newStatus}`,
+                409,
+            );
+        }
+
+        const result =
+            await orderRepository.updateOrderStatus(
+                orderId,
+                order.status,
+                newStatus,
+            );
+
+        if (result.count !== 1) {
+            throw new AppError(
+                ERROR_CODES.CONFLICT,
+                "Order status was changed by another request",
+                409,
+            );
+        }
+
+        const updatedOrder =
+            await orderRepository.findOrderById(
+                orderId,
+            );
+
+        if (!updatedOrder) {
+            throw new AppError(
+                ERROR_CODES.ORDER_NOT_FOUND,
+                "Order not found",
+                404,
+            );
+        }
+
+        return updatedOrder;
+    },
+
+    async confirmOrderAfterPayment(
+        orderId: string,
+    ) {
+        const result =
+            await orderRepository.updateOrderStatus(
+                orderId,
+                "PENDING",
+                "CONFIRMED",
+            );
+
+        if (result.count === 1) {
+            return {
+                confirmed: true,
+            };
+        }
+
+        const order =
+            await orderRepository.findOrderById(
+                orderId,
+            );
+
+        if (!order) {
+            throw new AppError(
+                ERROR_CODES.ORDER_NOT_FOUND,
+                "Order not found",
+                404,
+            );
+        }
+
+        if (order.status === "CONFIRMED") {
+            return {
+                confirmed: false,
+                alreadyConfirmed: true,
+            };
+        }
+
         throw new AppError(
             ERROR_CODES.CONFLICT,
-            `Order cannot transition from ${order.status} to ${newStatus}`,
+            `Order cannot be confirmed because its status is ${order.status}`,
             409,
         );
-    }
+    },
 
-    const result =
-        await orderRepository.updateOrderStatus(
-            orderId,
-            order.status,
-            newStatus,
-        );
-
-    if (result.count !== 1) {
-        throw new AppError(
-            ERROR_CODES.CONFLICT,
-            "Order status was changed by another request",
-            409,
-        );
-    }
-
-    const updatedOrder =
-        await orderRepository.findOrderById(orderId);
-
-    if (!updatedOrder) {
-        throw new AppError(
-            ERROR_CODES.ORDER_NOT_FOUND,
-            "Order not found",
-            404,
-        );
-    }
-
-    return updatedOrder;
-},
-
-
-async confirmOrderAfterPayment(
+    async cancelOrder(
     orderId: string,
+    reason?: string,
 ) {
-    const result =
-        await orderRepository.updateOrderStatus(
+    return prisma.$transaction(async (tx) => {
+
+        const order =
+            await orderRepository.findOrderForCancellation(
+                orderId,
+                tx,
+            );
+
+        if (!order) {
+            throw new AppError(
+                ERROR_CODES.ORDER_NOT_FOUND,
+                "Order not found",
+                404,
+            );
+        }
+
+        const allowedStatuses =
+            allowedOrderStatusTransitions[order.status];
+
+        if (!allowedStatuses.includes("CANCELLED")) {
+            throw new AppError(
+                ERROR_CODES.CONFLICT,
+                `Order cannot be cancelled because its status is ${order.status}`,
+                409,
+            );
+        }
+
+        const result =
+            await orderRepository.updateOrderStatus(
+                orderId,
+                order.status,
+                "CANCELLED",
+                tx,
+            );
+
+        if (result.count !== 1) {
+            throw new AppError(
+                ERROR_CODES.CONFLICT,
+                "Order status was changed by another request",
+                409,
+            );
+        }
+
+        /*
+         * No payment or unsuccessful payment:
+         * cancellation is complete without a refund.
+         */
+        if (
+            !order.payment ||
+            order.payment.status !== "SUCCESS"
+        ) {
+            return {
+                orderId,
+                status: "CANCELLED" as const,
+                refundRequired: false,
+            };
+        }
+
+        const successfulAttempt =
+            await paymentRepository.findSuccessfulAttemptByPaymentId(
+                order.payment.id,
+                tx,
+            );
+
+        if (
+            !successfulAttempt ||
+            !successfulAttempt.gatewayPaymentId
+        ) {
+            throw new AppError(
+                ERROR_CODES.CONFLICT,
+                "Successful payment attempt could not be found for refund",
+                409,
+            );
+        }
+
+        if (
+            order.payment.amountInPaise !==
+            order.totalInPaise
+        ) {
+            throw new AppError(
+                ERROR_CODES.CONFLICT,
+                "Payment amount does not match order amount",
+                409,
+            );
+        }
+
+        const refundId = crypto.randomUUID();
+
+        const refund =
+            await refundRepository.create(
+                {
+                    id: refundId,
+                    paymentId: order.payment.id,
+                    amountInPaise: order.payment.amountInPaise,
+                    gatewayPaymentId:
+                        successfulAttempt.gatewayPaymentId,
+                    idempotencyKey: refundId,
+                    reason: "",
+                },
+                tx,
+            );
+
+
+        await outboxRepository.createEvent(
+            {
+                eventType: "REFUND_REQUESTED",
+                aggregateType: "Refund",
+                aggregateId: refund.id,
+                payload: {
+                    refundId: refund.id,
+                    paymentId: order.payment.id,
+                    orderId: order.id,
+                    amountInPaise: refund.amountInPaise,
+                }
+            }
+        );    
+
+        return {
             orderId,
-            "PENDING",
-            "CONFIRMED",
-        );
-
-    if (result.count === 1) {
-        return {
-            confirmed: true,
+            status: "CANCELLED" as const,
+            refundRequired: true,
+            refundId: refund.id,
+            refundStatus: refund.status,
         };
-    }
-
-    const order =
-        await orderRepository.findOrderById(orderId);
-
-    if (!order) {
-        throw new AppError(
-            ERROR_CODES.ORDER_NOT_FOUND,
-            "Order not found",
-            404,
-        );
-    }
-
-    if (order.status === "CONFIRMED") {
-        return {
-            confirmed: false,
-            alreadyConfirmed: true,
-        };
-    }
-
-    throw new AppError(
-        ERROR_CODES.CONFLICT,
-        `Order cannot be confirmed because its status is ${order.status}`,
-        409,
-    );
+    });
 },
 };

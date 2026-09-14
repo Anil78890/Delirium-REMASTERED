@@ -23,7 +23,7 @@ export const allowedOrderStatusTransitions: Record<
     readonly OrderStatus[]
 > = {
     PENDING: ["CONFIRMED", "CANCELLED"],
-    CONFIRMED: ["PREPARING"],
+    CONFIRMED: ["PREPARING", "CANCELLED"],
     PREPARING: ["READY"],
     READY: ["OUT_FOR_DELIVERY"],
     OUT_FOR_DELIVERY: ["DELIVERED"],

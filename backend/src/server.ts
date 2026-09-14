@@ -5,6 +5,9 @@ import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
 import { connectRabbitMQ, setupRabbitMQTopology } from "./lib/rabbitmq.js";
 
+
+import { startRefundConsumer } from "./modules/payment/refund.consumer.js";
+
 import {
     startOutboxWorker,
     stopOutboxWorker,
@@ -65,6 +68,7 @@ async function startServer() {
         await setupRabbitMQTopology(rabbitMQChannel);
 
         await startOrderConfirmationConsumer();
+        await startRefundConsumer();
 
         server = app.listen(env.PORT, () => {
             logger.info(

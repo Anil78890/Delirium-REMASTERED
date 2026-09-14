@@ -43,4 +43,37 @@ export interface PaymentGateway {
   fetchPayment(
     gatewayPaymentId: string,
   ): Promise<FetchGatewayPaymentResult>;
+
+  createRefund(
+    input: CreateGatewayRefundInput,
+  ): Promise<CreateGatewayRefundResult>;
+
+  fetchRefund(
+    gatewayRefundId: string,
+  ): Promise<FetchGatewayRefundResult>;
+}
+
+
+export interface CreateGatewayRefundInput {
+  gatewayPaymentId: string;
+  amountInPaise: number;
+  idempotencyKey: string;
+  receipt: string;
+}
+
+export interface CreateGatewayRefundResult {
+  gatewayRefundId: string;
+  gatewayPaymentId: string;
+  amountInPaise: number;
+  currency: string;
+  status: string;
+}
+
+
+export interface FetchGatewayRefundResult {
+  gatewayRefundId: string;
+  gatewayPaymentId: string;
+  amountInPaise: number;
+  currency: string;
+  status: string;
 }

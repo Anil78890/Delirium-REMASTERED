@@ -84,6 +84,7 @@ export async function connectRabbitMQConsumer(): Promise<Channel> {
 export async function setupRabbitMQTopology(
     channel: ConfirmChannel,
 ): Promise<void> {
+
     await channel.assertExchange(
         RABBITMQ_EXCHANGES.PAYMENT_EVENTS,
         "topic",
@@ -91,6 +92,7 @@ export async function setupRabbitMQTopology(
             durable: true,
         },
     );
+
 
     await channel.assertQueue(
         RABBITMQ_QUEUES.ORDER_CONFIRMATION,
@@ -103,5 +105,19 @@ export async function setupRabbitMQTopology(
         RABBITMQ_QUEUES.ORDER_CONFIRMATION,
         RABBITMQ_EXCHANGES.PAYMENT_EVENTS,
         RABBITMQ_ROUTING_KEYS.PAYMENT_SUCCESS,
+    );
+
+
+    await channel.assertQueue(
+        RABBITMQ_QUEUES.REFUND_PROCESSING,
+        {
+            durable: true,
+        },
+    );
+
+    await channel.bindQueue(
+        RABBITMQ_QUEUES.REFUND_PROCESSING,
+        RABBITMQ_EXCHANGES.PAYMENT_EVENTS,
+        RABBITMQ_ROUTING_KEYS.REFUND_REQUESTED,
     );
 }

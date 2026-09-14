@@ -201,6 +201,7 @@ model Payment {
   order           Order         @relation(fields: [orderId],references: [id],onDelete: Restrict)
 
   attempts        PaymentAttempt[]
+  refunds         Refund[]
 
   @@index([status])
 }
@@ -264,4 +265,35 @@ model WebhookEvent {
 
   @@unique([provider, eventId])
   @@index([eventType])
+}
+
+
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+}
+
+
+model Refund {
+  id                  String                  @id @default(uuid())
+  paymentId           String                  
+  amountInPaise       Int
+  status              RefundStatus            @default(PENDING)
+
+  gatewayRefundId     String?                 @unique
+  gatewayPaymentId    String
+  idempotencyKey      String                  @unique
+
+  reason              String?
+
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+
+  payment             Payment                 @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@index([paymentId])
+  @@index([status])
 }

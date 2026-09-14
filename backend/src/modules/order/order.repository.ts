@@ -1,61 +1,63 @@
 import { prisma } from "../../lib/prisma.js";
-import type { PrismaClient, OrderStatus } from "../../generated/prisma/client.js";
+import type {
+    OrderStatus,
+    PrismaClient,
+} from "../../generated/prisma/client.js";
+import type {
+    CreateOrderData,
+} from "./order.types.js";
 
 type OrderDb = Pick<
     PrismaClient,
     "order"
 >;
 
-import type {
-    CreateOrderData,
-} from "./order.types.js";
-
 export const orderRepository = {
-
     createOrder(
-    data: CreateOrderData,
-    db: OrderDb = prisma,
-) {
-    return db.order.create({
-        data: {
-            userId: data.userId,
-            subtotalInPaise: data.subtotalInPaise,
-            totalInPaise: data.totalInPaise,
+        data: CreateOrderData,
+        db: OrderDb = prisma,
+    ) {
+        return db.order.create({
+            data: {
+                userId: data.userId,
+                subtotalInPaise: data.subtotalInPaise,
+                totalInPaise: data.totalInPaise,
 
-            items: {
-                create: data.items.map((item) => ({
-                    menuItemId: item.menuItemId,
-                    name: item.name,
-                    quantity: item.quantity,
-                    unitPriceInPaise: item.unitPriceInPaise,
-                })),
+                items: {
+                    create: data.items.map((item) => ({
+                        menuItemId: item.menuItemId,
+                        name: item.name,
+                        quantity: item.quantity,
+                        unitPriceInPaise: item.unitPriceInPaise,
+                    })),
+                },
             },
-        },
 
-        include: {
-            items: true,
-        },
-    });
-},
+            include: {
+                items: true,
+            },
+        });
+    },
 
+    findOrderById(
+        orderId: string,
+        db: OrderDb = prisma,
+    ) {
+        return db.order.findUnique({
+            where: {
+                id: orderId,
+            },
+            include: {
+                items: true,
+            },
+        });
+    },
 
-   findOrderById(
-    orderId: string,
-    db: OrderDb = prisma,
-) {
-    return db.order.findUnique({
-        where: {
-            id: orderId,
-        },
-        include: {
-            items: true,
-        },
-    });
-},
-
-
-    findOrdersByUserId(userId: string) {
-        return prisma.order.findMany({
+    findOrdersByUserId(
+        userId: string,
+        db: OrderDb = prisma,
+    ) {
+        return db.order.findMany({
             where: {
                 userId,
             },
@@ -70,21 +72,34 @@ export const orderRepository = {
         });
     },
 
-   updateOrderStatus(
-    orderId: string,
-    currentStatus: OrderStatus,
-    newStatus: OrderStatus,
-    db: OrderDb = prisma,
-) {
-    return db.order.updateMany({
-        where: {
-            id: orderId,
-            status: currentStatus,
-        },
-        data: {
-            status: newStatus,
-        },
-    });
-},
-    
+    updateOrderStatus(
+        orderId: string,
+        currentStatus: OrderStatus,
+        newStatus: OrderStatus,
+        db: OrderDb = prisma,
+    ) {
+        return db.order.updateMany({
+            where: {
+                id: orderId,
+                status: currentStatus,
+            },
+            data: {
+                status: newStatus,
+            },
+        });
+    },
+
+    findOrderForCancellation(
+        orderId: string,
+        db: OrderDb = prisma,
+    ) {
+        return db.order.findUnique({
+            where: {
+                id: orderId,
+            },
+            include: {
+                payment: true,
+            },
+        });
+    },
 };
