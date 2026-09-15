@@ -11,7 +11,7 @@ import type {
 
 type PaymentDb = Pick<
     PrismaClient,
-    "payment" | "paymentAttempt"
+    "payment" | "paymentAttempt" | "$executeRaw"
 >;
 
 export const paymentRepository = {
@@ -174,9 +174,6 @@ export const paymentRepository = {
         where: {
             paymentId,
             status: "SUCCESS",
-            gatewayPaymentId: {
-                not: null,
-            },
         },
 
         orderBy: {
@@ -184,4 +181,16 @@ export const paymentRepository = {
         },
       });
     },
+
+
+    acquirePaymentInitiationLock(
+    orderId: string,
+    db: PaymentDb,
+) {
+    return db.$executeRaw`
+        SELECT pg_advisory_xact_lock(
+            hashtextextended(${orderId}, 0)
+        )
+    `;
+},
 };

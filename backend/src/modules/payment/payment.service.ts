@@ -21,40 +21,51 @@ export const paymentService = {
     async initiatePayment(
     userId: string,
     orderId: string,
-    ) {
-         
-        const order = await orderRepository.findOrderById(orderId);
+) {
+    const order = await orderRepository.findOrderById(orderId);
 
-        if(!order) {
-             throw new AppError(
-                ERROR_CODES.ORDER_NOT_FOUND,
-                "Order not found",
-                404,
-            );
-        }
+    if (!order) {
+        throw new AppError(
+            ERROR_CODES.ORDER_NOT_FOUND,
+            "Order not found",
+            404,
+        );
+    }
 
-        if(order.userId !== userId) {
-            throw new AppError(
-                ERROR_CODES.FORBIDDEN,
-                "You do not have permission to pay for this order",
-                403,
-            );
-        }
+    if (order.userId !== userId) {
+        throw new AppError(
+            ERROR_CODES.FORBIDDEN,
+            "You do not have permission to pay for this order",
+            403,
+        );
+    }
 
-        if(order.status !== "PENDING") {
-            throw new AppError(
-                ERROR_CODES.CONFLICT,
-                `Order cannot be paid because its status is ${order.status}`,
-                409,
-            );
-        }
+    if (order.status !== "PENDING") {
+        throw new AppError(
+            ERROR_CODES.CONFLICT,
+            `Order cannot be paid because its status is ${order.status}`,
+            409,
+        );
+    }
 
+    const { payment, attempt } = await prisma.$transaction(async (tx) => {
+        // Lock this order so concurrent payment-initiation
+        // requests cannot create duplicate local records.
+        await paymentRepository.acquirePaymentInitiationLock(
+            order.id,
+            tx,
+        );
+
+        // ------------------------------------------------------------
+        // 1. Get or create Payment
+        // ------------------------------------------------------------
 
         let payment = await paymentRepository.findPaymentByOrderId(
             order.id,
+            tx,
         );
-       
-        if(payment?.status === "SUCCESS") {
+
+        if (payment?.status === "SUCCESS") {
             throw new AppError(
                 ERROR_CODES.CONFLICT,
                 "Order has already been paid",
@@ -62,65 +73,86 @@ export const paymentService = {
             );
         }
 
-        if(!payment) {
-             payment = await paymentRepository.createPayment({
-                orderId: order.id,
-                amountInPaise: order.totalInPaise,
-                gateway: "RAZORPAY",
-            });
+        if (!payment) {
+            payment = await paymentRepository.createPayment(
+                {
+                    orderId: order.id,
+                    amountInPaise: order.totalInPaise,
+                    gateway: "RAZORPAY",
+                },
+                tx,
+            );
         }
 
-        let attempt = await paymentRepository.findActiveAttemptByPaymentId(
-    payment.id,
-);
+        // ------------------------------------------------------------
+        // 2. Get or create active PaymentAttempt
+        // ------------------------------------------------------------
 
-if (!attempt) {
-    attempt = await paymentRepository.createPaymentAttempt({
-        paymentId: payment.id,
-        amountInPaise: payment.amountInPaise,
+        let attempt =
+            await paymentRepository.findActiveAttemptByPaymentId(
+                payment.id,
+                tx,
+            );
+
+        if (!attempt) {
+            attempt = await paymentRepository.createPaymentAttempt(
+                {
+                    paymentId: payment.id,
+                    amountInPaise: payment.amountInPaise,
+                },
+                tx,
+            );
+        }
+
+        return {
+            payment,
+            attempt,
+        };
     });
 
-    const gatewayOrder = await paymentGateway.createOrder({
-        amountInPaise: attempt.amountInPaise,
-        receipt: `delirium_attempt_${attempt.id}`,
-    });
+    // ------------------------------------------------------------
+    // 3. Create Razorpay order
+    // ------------------------------------------------------------
 
-    const result =
-        await paymentRepository.updatePaymentAttemptGatewayOrderId(
-            attempt.id,
-            gatewayOrder.gatewayOrderId,
-        );
-
-    if (result.count !== 1) {
-        throw new AppError(
-            ERROR_CODES.CONFLICT,
-            "Payment attempt was already associated with a gateway order",
-            409,
-        );
-    }
-
+    if (attempt.gatewayOrderId) {
     return {
         paymentId: payment.id,
         attemptId: attempt.id,
         orderId: order.id,
         amountInPaise: payment.amountInPaise,
-        gatewayOrderId: gatewayOrder.gatewayOrderId,
-        currency: gatewayOrder.currency,
+        gatewayOrderId: attempt.gatewayOrderId,
+        currency: "INR",
     };
 }
 
-        
-       return {
+const gatewayOrder = await paymentGateway.createOrder({
+    amountInPaise: attempt.amountInPaise,
+    receipt: `delirium_attempt_${attempt.id}`,
+});
+
+const result =
+    await paymentRepository.updatePaymentAttemptGatewayOrderId(
+        attempt.id,
+        gatewayOrder.gatewayOrderId,
+    );
+
+if (result.count !== 1) {
+    throw new AppError(
+        ERROR_CODES.CONFLICT,
+        "Payment attempt was already associated with a gateway order",
+        409,
+    );
+}
+
+return {
     paymentId: payment.id,
     attemptId: attempt.id,
     orderId: order.id,
     amountInPaise: payment.amountInPaise,
-    gatewayOrderId: attempt.gatewayOrderId,
-    currency: "INR",
+    gatewayOrderId: gatewayOrder.gatewayOrderId,
+    currency: gatewayOrder.currency,
 };
-
-    },
-
+},
 
     async verifyPayment(
         userId: string,
