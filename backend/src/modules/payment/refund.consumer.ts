@@ -1,9 +1,12 @@
 import { logger } from "../../lib/logger.js";
 import { connectRabbitMQConsumer } from "../../lib/rabbitmq.js";
-import { RABBITMQ_QUEUES } from "../../lib/rabbitmq.constants.js";
+import { RABBITMQ_QUEUES, RABBITMQ_ROUTING_KEYS } from "../../lib/rabbitmq.constants.js";
 import { refundService } from "./refund.service.js";
 import { RazorpayGateway } from "./razorpay.gateway.js";
 import { refundRequestedEventSchema } from "./refund.schema.js";
+import { classifyRabbitMQError } from "../../lib/rabbitmq-error-classifier.js";
+import { moveToDlq, retryOrMoveToDlq } from "../../lib/rabbitmq.consumer-retry.js";
+
 
 const PREFETCH_COUNT = 10;
 
@@ -47,11 +50,11 @@ export async function startRefundConsumer(): Promise<void> {
 
                     // Invalid message can never become valid
                     // by retrying it.
-                    channel.nack(
-                        message,
-                        false,
-                        false,
-                    );
+                    await moveToDlq(
+                          channel,
+                          message,
+                          RABBITMQ_ROUTING_KEYS.REFUND_PROCESSING_DLQ,
+                        );
 
                     return;
                 }
@@ -91,24 +94,44 @@ export async function startRefundConsumer(): Promise<void> {
                     },
                     "Refund event processed",
                 );
-            } catch (error) {
-                logger.error(
-                    {
-                        err: error,
-                        messageId:
-                            message.properties.messageId,
-                    },
-                    "Failed to process refund event",
-                );
+            } 
+            
+            catch (error) {
+    const errorType = classifyRabbitMQError(error);
 
-                // Technical failure:
-                // retry the message.
-                channel.nack(
-                    message,
-                    false,
-                    true,
-                );
-            }
+    logger.error(
+        {
+            error,
+            messageId: message.properties.messageId,
+            errorType,
+        },
+        "Failed to process refund message",
+    );
+
+    if (errorType === "PERMANENT") {
+        await moveToDlq(
+            channel,
+            message,
+            RABBITMQ_ROUTING_KEYS.REFUND_PROCESSING_DLQ,
+        );
+
+        return;
+    }
+
+    await retryOrMoveToDlq(
+        channel,
+        message,
+        {
+            retryRoutingKeys: [
+                RABBITMQ_ROUTING_KEYS.REFUND_PROCESSING_RETRY_5S,
+                RABBITMQ_ROUTING_KEYS.REFUND_PROCESSING_RETRY_30S,
+                RABBITMQ_ROUTING_KEYS.REFUND_PROCESSING_RETRY_120S,
+            ],
+            dlqRoutingKey:
+                RABBITMQ_ROUTING_KEYS.REFUND_PROCESSING_DLQ,
+        },
+    );
+}
         },
     );
 

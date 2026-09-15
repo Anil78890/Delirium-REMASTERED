@@ -2,9 +2,12 @@ import { logger } from "../../lib/logger.js";
 import { connectRabbitMQConsumer } from "../../lib/rabbitmq.js";
 import {
     RABBITMQ_QUEUES,
+    RABBITMQ_ROUTING_KEYS,
 } from "../../lib/rabbitmq.constants.js";
 import { paymentSuccessEventSchema } from "../payment/payment.schema.js";
 import { orderService } from "./order.service.js";
+import { moveToDlq, retryOrMoveToDlq } from "../../lib/rabbitmq.consumer-retry.js";
+import { classifyRabbitMQError } from "../../lib/rabbitmq-error-classifier.js";
 
 const PREFETCH_COUNT = 10;
 
@@ -38,10 +41,10 @@ export async function startOrderConfirmationConsumer(): Promise<void> {
                         "Invalid payment success event",
                     );
 
-                    channel.nack(
+                    await moveToDlq(
+                        channel,
                         message,
-                        false,
-                        false,
+                        RABBITMQ_ROUTING_KEYS.ORDER_CONFIRMATION_DLQ,
                     );
 
                     return;
@@ -55,6 +58,8 @@ export async function startOrderConfirmationConsumer(): Promise<void> {
                     },
                     "Payment success event received",
                 );
+                
+               
 
                 await orderService.confirmOrderAfterPayment(
                     event.orderId,
@@ -69,21 +74,43 @@ export async function startOrderConfirmationConsumer(): Promise<void> {
                     },
                     "Order confirmed after successful payment",
                 );
-            } catch (error) {
-                logger.error(
-                    {
-                        err: error,
-                        messageId: message.properties.messageId,
-                    },
-                    "Failed to process payment success event",
-                );
+            } 
+            catch (error) {
+    const errorType = classifyRabbitMQError(error);
 
-                channel.nack(
-                    message,
-                    false,
-                    true,
-                );
-            }
+    logger.error(
+        {
+            error,
+            messageId: message.properties.messageId,
+            errorType,
+        },
+        "Failed to process order confirmation message",
+    );
+
+    if (errorType === "PERMANENT") {
+        await moveToDlq(
+            channel,
+            message,
+            RABBITMQ_ROUTING_KEYS.ORDER_CONFIRMATION_DLQ,
+        );
+
+        return;
+    }
+
+    await retryOrMoveToDlq(
+        channel,
+        message,
+        {
+            retryRoutingKeys: [
+                RABBITMQ_ROUTING_KEYS.ORDER_CONFIRMATION_RETRY_5S,
+                RABBITMQ_ROUTING_KEYS.ORDER_CONFIRMATION_RETRY_30S,
+                RABBITMQ_ROUTING_KEYS.ORDER_CONFIRMATION_RETRY_120S,
+            ],
+            dlqRoutingKey:
+                RABBITMQ_ROUTING_KEYS.ORDER_CONFIRMATION_DLQ,
+        },
+    );
+}
         },
     );
 

@@ -1,7 +1,6 @@
 import amqp, {
-    type Channel,
-    type ConfirmChannel,
     type ChannelModel,
+    type ConfirmChannel,
 } from "amqplib";
 
 import {
@@ -13,7 +12,17 @@ import {
 import { env } from "../config/env.js";
 import { logger } from "./logger.js";
 
+
+// ============================================================
+// Types
+// ============================================================
+
 type RabbitMQRecoveryHandler = () => Promise<void>;
+
+
+// ============================================================
+// Recovery Handler
+// ============================================================
 
 let recoveryHandler: RabbitMQRecoveryHandler | null = null;
 
@@ -24,21 +33,32 @@ export function registerRabbitMQRecoveryHandler(
 }
 
 
+// ============================================================
+// Reconnection State
+// ============================================================
+
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let reconnectAttempt = 0;
 let isShuttingDown = false;
+let isRecovering = false;
 
 const INITIAL_RECONNECT_DELAY_MS = 1_000;
 const MAX_RECONNECT_DELAY_MS = 30_000;
 
+
+// ============================================================
+// RabbitMQ Resources
+// ============================================================
+
 let connection: ChannelModel | null = null;
 
 let publisherChannel: ConfirmChannel | null = null;
-let consumerChannel: Channel | null = null;
+let consumerChannel: ConfirmChannel | null = null;
 
 
-let isRecovering = false;
-
+// ============================================================
+// Reconnection
+// ============================================================
 
 function scheduleReconnect(): void {
     if (isShuttingDown) {
@@ -127,36 +147,48 @@ async function reconnectRabbitMQ(): Promise<void> {
     }
 }
 
+
+// ============================================================
+// Connection
+// ============================================================
+
 async function getConnection(): Promise<ChannelModel> {
     if (connection) {
         return connection;
     }
 
-    connection = await amqp.connect(env.RABBITMQ_URL);
+    connection = await amqp.connect(
+        env.RABBITMQ_URL,
+    );
 
     connection.on("error", (error) => {
-    logger.error(
-        {
-            err: error,
-        },
-        "RabbitMQ connection error",
-    );
-});
+        logger.error(
+            {
+                err: error,
+            },
+            "RabbitMQ connection error",
+        );
+    });
 
-connection.on("close", () => {
-    connection = null;
-    publisherChannel = null;
-    consumerChannel = null;
+    connection.on("close", () => {
+        connection = null;
+        publisherChannel = null;
+        consumerChannel = null;
 
-    logger.warn(
-        "RabbitMQ connection closed",
-    );
+        logger.warn(
+            "RabbitMQ connection closed",
+        );
 
-    scheduleReconnect();
-});
+        scheduleReconnect();
+    });
 
     return connection;
 }
+
+
+// ============================================================
+// Publisher Channel
+// ============================================================
 
 export async function connectRabbitMQ(): Promise<ConfirmChannel> {
     if (publisherChannel) {
@@ -179,15 +211,20 @@ export async function connectRabbitMQ(): Promise<ConfirmChannel> {
     return publisherChannel;
 }
 
-export async function connectRabbitMQConsumer(): Promise<Channel> {
-    if (consumerChannel) {
+
+// ============================================================
+// Consumer Channel
+// ============================================================
+
+export async function connectRabbitMQConsumer(): Promise<ConfirmChannel> {
+
+    if(consumerChannel) {
         return consumerChannel;
     }
 
     const rabbitMQConnection = await getConnection();
 
-    consumerChannel =
-        await rabbitMQConnection.createChannel();
+    consumerChannel = await rabbitMQConnection.createConfirmChannel();
 
     consumerChannel.on("error", () => {
         consumerChannel = null;
@@ -200,18 +237,46 @@ export async function connectRabbitMQConsumer(): Promise<Channel> {
     return consumerChannel;
 }
 
+
+// ============================================================
+// RabbitMQ Topology
+// ============================================================
+
 export async function setupRabbitMQTopology(
     channel: ConfirmChannel,
 ): Promise<void> {
 
+    // --------------------------------------------------------
+    // Exchange
+    // --------------------------------------------------------
+
     await channel.assertExchange(
         RABBITMQ_EXCHANGES.PAYMENT_EVENTS,
-        "topic",
+        "topic", // direct or topic or fanout -> choosed topic as per the requirement.
         {
             durable: true,
         },
     );
 
+        await channel.assertExchange(
+        RABBITMQ_EXCHANGES.PAYMENT_EVENTS_RETRY,
+        "direct",
+        {
+            durable: true,
+        },
+    );
+
+    await channel.assertExchange(
+        RABBITMQ_EXCHANGES.PAYMENT_EVENTS_DLQ,
+        "direct",
+        {
+            durable: true,
+        },
+    );
+
+    // --------------------------------------------------------
+    // Order Confirmation Queue
+    // --------------------------------------------------------
 
     await channel.assertQueue(
         RABBITMQ_QUEUES.ORDER_CONFIRMATION,
@@ -226,6 +291,86 @@ export async function setupRabbitMQTopology(
         RABBITMQ_ROUTING_KEYS.PAYMENT_SUCCESS,
     );
 
+        await channel.assertQueue(
+        RABBITMQ_QUEUES.ORDER_CONFIRMATION_RETRY_5S,
+        {
+            durable: true,
+            arguments: {
+                "x-message-ttl": 5_000,
+                "x-dead-letter-exchange":
+                    RABBITMQ_EXCHANGES.PAYMENT_EVENTS,
+                "x-dead-letter-routing-key":
+                    RABBITMQ_ROUTING_KEYS.PAYMENT_SUCCESS,
+            },
+        },
+    );
+
+    await channel.bindQueue(
+        RABBITMQ_QUEUES.ORDER_CONFIRMATION_RETRY_5S,
+        RABBITMQ_EXCHANGES.PAYMENT_EVENTS_RETRY,
+        RABBITMQ_ROUTING_KEYS.ORDER_CONFIRMATION_RETRY_5S,
+    );
+
+
+    await channel.assertQueue(
+        RABBITMQ_QUEUES.ORDER_CONFIRMATION_RETRY_30S,
+        {
+            durable: true,
+            arguments: {
+                "x-message-ttl": 30_000,
+                "x-dead-letter-exchange":
+                    RABBITMQ_EXCHANGES.PAYMENT_EVENTS,
+                "x-dead-letter-routing-key":
+                    RABBITMQ_ROUTING_KEYS.PAYMENT_SUCCESS,
+            },
+        },
+    );
+
+    await channel.bindQueue(
+        RABBITMQ_QUEUES.ORDER_CONFIRMATION_RETRY_30S,
+        RABBITMQ_EXCHANGES.PAYMENT_EVENTS_RETRY,
+        RABBITMQ_ROUTING_KEYS.ORDER_CONFIRMATION_RETRY_30S,
+    );
+
+
+    await channel.assertQueue(
+        RABBITMQ_QUEUES.ORDER_CONFIRMATION_RETRY_120S,
+        {
+            durable: true,
+            arguments: {
+                "x-message-ttl": 120_000,
+                "x-dead-letter-exchange":
+                    RABBITMQ_EXCHANGES.PAYMENT_EVENTS,
+                "x-dead-letter-routing-key":
+                    RABBITMQ_ROUTING_KEYS.PAYMENT_SUCCESS,
+            },
+        },
+    );
+
+    await channel.bindQueue(
+        RABBITMQ_QUEUES.ORDER_CONFIRMATION_RETRY_120S,
+        RABBITMQ_EXCHANGES.PAYMENT_EVENTS_RETRY,
+        RABBITMQ_ROUTING_KEYS.ORDER_CONFIRMATION_RETRY_120S,
+    );
+
+
+    await channel.assertQueue(
+        RABBITMQ_QUEUES.ORDER_CONFIRMATION_DLQ,
+        {
+            durable: true,
+        },
+    );
+
+    await channel.bindQueue(
+        RABBITMQ_QUEUES.ORDER_CONFIRMATION_DLQ,
+        RABBITMQ_EXCHANGES.PAYMENT_EVENTS_DLQ,
+        RABBITMQ_ROUTING_KEYS.ORDER_CONFIRMATION_DLQ,
+    );
+
+
+    // --------------------------------------------------------
+    // Refund Processing Queue
+    // --------------------------------------------------------
 
     await channel.assertQueue(
         RABBITMQ_QUEUES.REFUND_PROCESSING,
@@ -238,5 +383,82 @@ export async function setupRabbitMQTopology(
         RABBITMQ_QUEUES.REFUND_PROCESSING,
         RABBITMQ_EXCHANGES.PAYMENT_EVENTS,
         RABBITMQ_ROUTING_KEYS.REFUND_REQUESTED,
+    );
+
+
+        await channel.assertQueue(
+        RABBITMQ_QUEUES.REFUND_PROCESSING_RETRY_5S,
+        {
+            durable: true,
+            arguments: {
+                "x-message-ttl": 5_000,
+                "x-dead-letter-exchange":
+                    RABBITMQ_EXCHANGES.PAYMENT_EVENTS,
+                "x-dead-letter-routing-key":
+                    RABBITMQ_ROUTING_KEYS.REFUND_REQUESTED,
+            },
+        },
+    );
+
+    await channel.bindQueue(
+        RABBITMQ_QUEUES.REFUND_PROCESSING_RETRY_5S,
+        RABBITMQ_EXCHANGES.PAYMENT_EVENTS_RETRY,
+        RABBITMQ_ROUTING_KEYS.REFUND_PROCESSING_RETRY_5S,
+    );
+
+
+    await channel.assertQueue(
+        RABBITMQ_QUEUES.REFUND_PROCESSING_RETRY_30S,
+        {
+            durable: true,
+            arguments: {
+                "x-message-ttl": 30_000,
+                "x-dead-letter-exchange":
+                    RABBITMQ_EXCHANGES.PAYMENT_EVENTS,
+                "x-dead-letter-routing-key":
+                    RABBITMQ_ROUTING_KEYS.REFUND_REQUESTED,
+            },
+        },
+    );
+
+    await channel.bindQueue(
+        RABBITMQ_QUEUES.REFUND_PROCESSING_RETRY_30S,
+        RABBITMQ_EXCHANGES.PAYMENT_EVENTS_RETRY,
+        RABBITMQ_ROUTING_KEYS.REFUND_PROCESSING_RETRY_30S,
+    );
+
+
+    await channel.assertQueue(
+        RABBITMQ_QUEUES.REFUND_PROCESSING_RETRY_120S,
+        {
+            durable: true,
+            arguments: {
+                "x-message-ttl": 120_000,
+                "x-dead-letter-exchange":
+                    RABBITMQ_EXCHANGES.PAYMENT_EVENTS,
+                "x-dead-letter-routing-key":
+                    RABBITMQ_ROUTING_KEYS.REFUND_REQUESTED,
+            },
+        },
+    );
+
+    await channel.bindQueue(
+        RABBITMQ_QUEUES.REFUND_PROCESSING_RETRY_120S,
+        RABBITMQ_EXCHANGES.PAYMENT_EVENTS_RETRY,
+        RABBITMQ_ROUTING_KEYS.REFUND_PROCESSING_RETRY_120S,
+    );
+
+
+    await channel.assertQueue(
+        RABBITMQ_QUEUES.REFUND_PROCESSING_DLQ,
+        {
+            durable: true,
+        },
+    );
+
+    await channel.bindQueue(
+        RABBITMQ_QUEUES.REFUND_PROCESSING_DLQ,
+        RABBITMQ_EXCHANGES.PAYMENT_EVENTS_DLQ,
+        RABBITMQ_ROUTING_KEYS.REFUND_PROCESSING_DLQ,
     );
 }
