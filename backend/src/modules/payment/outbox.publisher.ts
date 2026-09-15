@@ -6,7 +6,7 @@ import {
 import { outboxRepository } from "./outbox.repository.js";
 import { getOutboxRoutingKey } from "./outbox.events.js";
 import { serializeOutboxPayload } from "./outbox.message.js";
-import { getRetryDelayMs } from "./outbox.retry.js";
+import { getRetryDelayMs, MAX_OUTBOX_ATTEMPTS } from "./outbox.retry.js";
 
 const BATCH_SIZE = 10;
  const PROCESSING_TIMEOUT_MS = 60_000;
@@ -72,6 +72,36 @@ await outboxRepository.requeueStaleProcessingEvents(
             );
         }
     } catch (error) {
+    if (event.attempts >= MAX_OUTBOX_ATTEMPTS) {
+        const result =
+    await outboxRepository.markPermanentlyFailed(
+        event.id,
+    );
+
+if (result.count !== 1) {
+    logger.warn(
+        {
+            eventId: event.id,
+            attempts: event.attempts,
+        },
+        "Outbox event could not be marked as permanently failed",
+    );
+
+    continue;
+}
+
+logger.error(
+    {
+        err: error,
+        eventId: event.id,
+        attempts: event.attempts,
+    },
+    "Outbox event permanently failed after maximum attempts",
+);
+
+continue;
+    }
+
     const retryDelayMs = getRetryDelayMs(
         event.attempts,
     );
@@ -93,7 +123,7 @@ await outboxRepository.requeueStaleProcessingEvents(
             retryDelayMs,
             availableAt,
         },
-        "Failed to publish outbox event",
+        "Failed to publish outbox event; scheduled for retry",
     );
 }
 }

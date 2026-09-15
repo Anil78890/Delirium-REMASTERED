@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import type { PrismaClient } from "../../generated/prisma/client.js";
+import { MAX_OUTBOX_ATTEMPTS } from "./outbox.retry.js";
 
 type OutboxDb = Pick<
     PrismaClient,
@@ -60,6 +61,7 @@ export const outboxRepository = {
                 WHERE
                     "status" = 'PENDING'
                     AND "availableAt" <= NOW()
+                    AND "attempts" < ${MAX_OUTBOX_ATTEMPTS}
                 ORDER BY "createdAt"
                 FOR UPDATE SKIP LOCKED
                 LIMIT ${limit}
@@ -121,6 +123,9 @@ export const outboxRepository = {
     return db.outboxEvent.updateMany({
         where: {
             status: "FAILED",
+            attempts: {
+                lt: MAX_OUTBOX_ATTEMPTS,
+            },
             availableAt: {
                 lte: new Date(),
             },
@@ -131,7 +136,7 @@ export const outboxRepository = {
     });
 },
 
-requeueStaleProcessingEvents(
+async requeueStaleProcessingEvents(
     processingTimeoutMs: number,
     db: OutboxDb = prisma,
 ) {
@@ -139,15 +144,57 @@ requeueStaleProcessingEvents(
         Date.now() - processingTimeoutMs,
     );
 
-    return db.outboxEvent.updateMany({
+    // Events that still have retry attempts available
+    const requeuedResult = await db.outboxEvent.updateMany({
         where: {
             status: "PROCESSING",
+            attempts: {
+                lt: MAX_OUTBOX_ATTEMPTS,
+            },
             updatedAt: {
                 lt: staleBefore,
             },
         },
         data: {
             status: "PENDING",
+        },
+    });
+
+    // Events that have exhausted all attempts
+    const permanentlyFailedResult =
+        await db.outboxEvent.updateMany({
+            where: {
+                status: "PROCESSING",
+                attempts: {
+                    gte: MAX_OUTBOX_ATTEMPTS,
+                },
+                updatedAt: {
+                    lt: staleBefore,
+                },
+            },
+            data: {
+                status: "FAILED",
+            },
+        });
+
+    return {
+        requeued: requeuedResult.count,
+        permanentlyFailed:
+            permanentlyFailedResult.count,
+    };
+},
+
+markPermanentlyFailed(
+    eventId: string,
+    db: OutboxDb = prisma,
+) {
+    return db.outboxEvent.updateMany({
+        where: {
+            id: eventId,
+            status: "PROCESSING",
+        },
+        data: {
+            status: "FAILED",
         },
     });
 },
