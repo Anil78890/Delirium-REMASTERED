@@ -4,7 +4,7 @@ import type { PrismaClient } from "../../generated/prisma/client.js";
 
 type CartDb = Pick<
     PrismaClient,
-    "cart" | "cartItem"
+    "cart" | "cartItem" | "$executeRaw"
 >;
 
 import type {
@@ -135,5 +135,21 @@ export const cartRepository = {
             },
         },
     });
+},
+
+incrementCartItemQuantity(
+    cartItemId: string,
+    quantityToAdd: number,
+    db: CartDb = prisma,
+) {
+    return db.$executeRaw`
+        UPDATE "CartItem"
+        SET
+            "quantity" = "quantity" + ${quantityToAdd},
+            "updatedAt" = NOW()
+        WHERE
+            "id" = ${cartItemId}
+            AND "quantity" + ${quantityToAdd} <= 20
+    `;
 },
 };

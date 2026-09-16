@@ -56,11 +56,24 @@ export const cartService = {
         );
 
         if (existingItem) {
-            return cartRepository.updateCartItemQuantity(
-                existingItem.id,
-                existingItem.quantity + input.quantity,
-            );
-        }
+    const result =
+        await cartRepository.incrementCartItemQuantity(
+            existingItem.id,
+            input.quantity,
+        );
+
+    if (result === 0) {
+        throw new AppError(
+            ERROR_CODES.VALIDATION_ERROR,
+            "Cart item quantity cannot exceed 20",
+            400,
+        );
+    }
+
+    return cartRepository.findCartItemById(
+        existingItem.id,
+    );
+}
 
         return cartRepository.createCartItem({
             cartId: cart.id,

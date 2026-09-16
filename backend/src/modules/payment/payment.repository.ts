@@ -150,6 +150,70 @@ export const paymentRepository = {
         });
     },
 
+
+    claimGatewayOrderCreationLease(
+        attemptId: string,
+        token: string,
+        leaseUntil: Date,
+        db: PaymentDb = prisma,
+    ) {
+        return db.paymentAttempt.updateMany({
+            where: {
+                id: attemptId,
+                gatewayOrderId: null,
+                status: "CREATED",
+                OR: [
+                    { gatewayOrderCreationUntil: null },
+                    { gatewayOrderCreationUntil: { lt: new Date() } },
+                ],
+            },
+            data: {
+                gatewayOrderCreationToken: token,
+                 gatewayOrderCreationUntil: leaseUntil,
+            },
+        });
+    },
+
+    finalizeGatewayOrderCreation(
+    attemptId: string,
+    creationToken: string,
+    gatewayOrderId: string,
+    gatewayOrderCreatedAt: Date,
+    db: PaymentDb = prisma,
+) {
+    return db.paymentAttempt.updateMany({
+        where: {
+            id: attemptId,
+            gatewayOrderId: null,
+            gatewayOrderCreationToken: creationToken,
+        },
+        data: {
+            gatewayOrderId,
+            gatewayOrderCreatedAt,
+            gatewayOrderCreationToken: null,
+            gatewayOrderCreationUntil: null,
+        },
+    });
+},
+
+   releaseGatewayOrderCreationLease(
+    attemptId: string,
+    creationToken: string,
+    db: PaymentDb = prisma,
+) {
+    return db.paymentAttempt.updateMany({
+        where: {
+            id: attemptId,
+            gatewayOrderId: null,
+            gatewayOrderCreationToken: creationToken,
+        },
+        data: {
+            gatewayOrderCreationToken: null,
+            gatewayOrderCreationUntil: null,
+        },
+    });
+},
+
     findAttemptById(
         attemptId: string,
         db: PaymentDb = prisma,
