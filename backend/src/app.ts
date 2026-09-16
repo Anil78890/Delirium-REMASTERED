@@ -5,6 +5,7 @@ import webhookRouter from "./modules/payment/webhook.routes.js";
 import { requestIdMiddleware } from "./middlewares/requestId.middleware.js";
 import { requestLoggerMiddleware } from "./middlewares/requestLogger.middleware.js";
 import cors from "cors";
+import { apiRateLimiter } from "./middlewares/rateLimit.middleware.js";
 
 
 const app = express();
@@ -30,6 +31,8 @@ app.get("/health", (req, res) => {
         message: "Server is healthy",
     });
 });
+
+app.use("/api/v1", apiRateLimiter);
 app.use("/api/v1", router);
 
 
