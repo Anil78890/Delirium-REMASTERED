@@ -4,7 +4,7 @@ import type { PrismaClient } from "../../generated/prisma/client.js";
 
 type CartDb = Pick<
     PrismaClient,
-    "cart" | "cartItem" | "$executeRaw"
+    "cart" | "cartItem" | "$executeRaw" | "$queryRaw"
 >;
 
 import type {
@@ -118,6 +118,26 @@ export const cartRepository = {
             },
         });
     },
+
+
+    lockCartForCheckout(
+    userId: string,
+    db: CartDb = prisma,
+) {
+    return db.$queryRaw<
+        Array<{
+            id: string;
+            userId: string;
+        }>
+    >`
+        SELECT
+            "id",
+            "userId"
+        FROM "Cart"
+        WHERE "userId" = ${userId}
+        FOR UPDATE
+    `;
+},
 
     findCartForCheckout(
     userId: string,

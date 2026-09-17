@@ -247,7 +247,7 @@ export const paymentRepository = {
     },
 
 
-    acquirePaymentInitiationLock(
+    acquireOrderLock(
     orderId: string,
     db: PaymentDb,
 ) {

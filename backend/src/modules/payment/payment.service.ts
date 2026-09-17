@@ -47,7 +47,7 @@ export const paymentService = {
             async (tx) => {
                 // Lock this order so concurrent payment-initiation
                 // requests cannot create duplicate local records.
-                await paymentRepository.acquirePaymentInitiationLock(
+                await paymentRepository.acquireOrderLock(
                     order.id,
                     tx,
                 );
@@ -315,6 +315,13 @@ if (result.count !== 1) {
         input: PaymentSuccessInput,
     ) {
         return prisma.$transaction(async (tx) => {
+
+             await paymentRepository.acquireOrderLock(
+            input.orderId,
+            tx,
+        );
+
+        
             const attempt =
                 await paymentRepository.findAttemptById(
                     input.paymentAttemptId,

@@ -19,76 +19,81 @@ import { outboxRepository } from "../payment/outbox.repository.js";
 
 export const orderService = {
     async createOrder(userId: string) {
-        return prisma.$transaction(async (tx) => {
-            const cart =
-                await cartRepository.findCartForCheckout(
-                    userId,
-                    tx,
-                );
+    return prisma.$transaction(async (tx) => {
+        await cartRepository.lockCartForCheckout(
+            userId,
+            tx,
+        );
 
-            if (!cart || cart.items.length === 0) {
+        const cart =
+            await cartRepository.findCartForCheckout(
+                userId,
+                tx,
+            );
+
+        if (!cart || cart.items.length === 0) {
+            throw new AppError(
+                ERROR_CODES.VALIDATION_ERROR,
+                "Cart is empty",
+                400,
+            );
+        }
+
+        let subtotalInPaise = 0;
+
+        const items = cart.items.map((cartItem) => {
+            const menuItem = cartItem.menuItem;
+
+            if (!menuItem.isActive) {
                 throw new AppError(
                     ERROR_CODES.VALIDATION_ERROR,
-                    "Cart is empty",
+                    `Menu item "${menuItem.name}" is no longer available`,
                     400,
                 );
             }
 
-            let subtotalInPaise = 0;
-
-            const items = cart.items.map((cartItem) => {
-                const menuItem = cartItem.menuItem;
-
-                if (!menuItem.isActive) {
-                    throw new AppError(
-                        ERROR_CODES.VALIDATION_ERROR,
-                        `Menu item "${menuItem.name}" is no longer available`,
-                        400,
-                    );
-                }
-
-                if (!menuItem.isAvailable) {
-                    throw new AppError(
-                        ERROR_CODES.VALIDATION_ERROR,
-                        `Menu item "${menuItem.name}" is currently unavailable`,
-                        400,
-                    );
-                }
-
-                const itemTotal =
-                    menuItem.priceInPaise *
-                    cartItem.quantity;
-
-                subtotalInPaise += itemTotal;
-
-                return {
-                    menuItemId: menuItem.id,
-                    name: menuItem.name,
-                    quantity: cartItem.quantity,
-                    unitPriceInPaise:
-                        menuItem.priceInPaise,
-                };
-            });
-
-            const order =
-                await orderRepository.createOrder(
-                    {
-                        userId,
-                        subtotalInPaise,
-                        totalInPaise: subtotalInPaise,
-                        items,
-                    },
-                    tx,
+            if (!menuItem.isAvailable) {
+                throw new AppError(
+                    ERROR_CODES.VALIDATION_ERROR,
+                    `Menu item "${menuItem.name}" is currently unavailable`,
+                    400,
                 );
+            }
 
-            await cartRepository.clearCart(
-                cart.id,
+            const itemTotal =
+                menuItem.priceInPaise *
+                cartItem.quantity;
+
+            subtotalInPaise += itemTotal;
+
+            return {
+                menuItemId: menuItem.id,
+                name: menuItem.name,
+                quantity: cartItem.quantity,
+                unitPriceInPaise:
+                    menuItem.priceInPaise,
+            };
+        });
+
+        const order =
+            await orderRepository.createOrder(
+                {
+                    userId,
+                    subtotalInPaise,
+                    totalInPaise: subtotalInPaise,
+                    items,
+                },
                 tx,
             );
 
-            return order;
-        });
-    },
+        await cartRepository.clearCart(
+            cart.id,
+            tx,
+        );
+
+        return order;
+    });
+},
 
     async getOrders(userId: string) {
         return orderRepository.findOrdersByUserId(
@@ -259,6 +264,11 @@ getAdminOrderById: async (orderId: string) => {
     reason?: string,
 ) {
     return prisma.$transaction(async (tx) => {
+
+        await paymentRepository.acquireOrderLock(
+    orderId,
+    tx,
+);
 
         const order =
             await orderRepository.findOrderForCancellation(
