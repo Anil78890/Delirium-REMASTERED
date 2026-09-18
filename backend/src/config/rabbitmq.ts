@@ -7,9 +7,9 @@ import {
     RABBITMQ_EXCHANGES,
     RABBITMQ_QUEUES,
     RABBITMQ_ROUTING_KEYS,
-} from "./rabbitmq.constants.js";
+} from "../lib/rabbitmq.constants.js";
 
-import { env } from "../config/env.js";
+import { env } from "./env.js";
 import { logger } from "./logger.js";
 
 
@@ -290,6 +290,19 @@ export async function setupRabbitMQTopology(
         RABBITMQ_EXCHANGES.PAYMENT_EVENTS,
         RABBITMQ_ROUTING_KEYS.PAYMENT_SUCCESS,
     );
+
+    await channel.assertQueue(
+    RABBITMQ_QUEUES.ORDER_STATUS_REALTIME,
+    {
+        durable: true,
+    },
+);
+
+await channel.bindQueue(
+    RABBITMQ_QUEUES.ORDER_STATUS_REALTIME,
+    RABBITMQ_EXCHANGES.PAYMENT_EVENTS,
+    RABBITMQ_ROUTING_KEYS.ORDER_STATUS_CHANGED,
+);
 
         await channel.assertQueue(
         RABBITMQ_QUEUES.ORDER_CONFIRMATION_RETRY_5S,

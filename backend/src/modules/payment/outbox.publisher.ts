@@ -1,5 +1,5 @@
-import { logger } from "../../lib/logger.js";
-import { connectRabbitMQ } from "../../lib/rabbitmq.js";
+import { logger } from "../../config/logger.js";
+import { connectRabbitMQ } from "../../config/rabbitmq.js";
 import {
     RABBITMQ_EXCHANGES,
 } from "../../lib/rabbitmq.constants.js";
@@ -14,17 +14,17 @@ const BATCH_SIZE = 10;
 export async function publishOutboxEvents(): Promise<void> {
     const channel = await connectRabbitMQ();
 
-    await outboxRepository.requeueFailedEvents();
+    await outboxRepository.requeueFailedEvents(); //failed and attemts are remaining, FAILED -> PENDING.
 
    
 
 await outboxRepository.requeueStaleProcessingEvents(
     PROCESSING_TIMEOUT_MS,
-);
+);  // events which are still in processing status for more than PROCESSING_TIMEOUT_MS time, Processing -> pending.
 
     const events = await outboxRepository.claimPendingEvents(
         BATCH_SIZE,
-    );
+    ); // Pending -> Processing and attempt: 0 -> 1 and lock the row;
 
     if (events.length === 0) {
         return;
@@ -73,6 +73,7 @@ await outboxRepository.requeueStaleProcessingEvents(
         }
     } catch (error) {
     if (event.attempts >= MAX_OUTBOX_ATTEMPTS) {
+        
         const result =
     await outboxRepository.markPermanentlyFailed(
         event.id,

@@ -1,88 +1,62 @@
-import app from "./app.js";
+import { createServer } from "node:http";
 
+import app from "./app.js";
 import { env } from "./config/env.js";
 
-import { logger } from "./lib/logger.js";
-import {
-    connectRabbitMQ,
-    setupRabbitMQTopology,
-    registerRabbitMQRecoveryHandler,
-} from "./lib/rabbitmq.js";
-
 import { startRefundConsumer } from "./modules/payment/refund.consumer.js";
-
 import {
     startOutboxWorker,
     stopOutboxWorker,
 } from "./modules/payment/outbox.worker.js";
-
 import {
     startOrderConfirmationConsumer,
 } from "./modules/order/order-confirmation.consumer.js";
 import { startRefundReconciliationWorker } from "./modules/payment/refund.reconciliation.worker.js";
+import { createRealtimeServer } from "./modules/realtime/realtime.server.js";
+import { logger } from "./config/logger.js";
+import { connectRabbitMQ, registerRabbitMQRecoveryHandler, setupRabbitMQTopology } from "./config/rabbitmq.js";
+import { startOrderRealtimeConsumer } from "./modules/order/order-realtime.consumer.js";
 
-let server: ReturnType<typeof app.listen>;
+let server: ReturnType<typeof createServer>;
 
 const shutdown = (signal: string) => {
-    logger.info(
-        { signal },
-        "Shutdown signal received",
-    );
+    logger.info({ signal }, "Shutdown signal received");
 
     stopOutboxWorker();
 
     server?.close(() => {
         logger.info("HTTP server closed");
-
         process.exit(0);
     });
 };
-process.on("SIGTERM", () => {
-    shutdown("SIGTERM");
-}); // // Commonly used by infrastructure to request termination.
 
-process.on("SIGINT", () => {
-    shutdown("SIGINT");
-});//Usually generated when you press:
-// // Ctrl + C
-// // during production it is visible.
-
-process.on("uncaughtException", (error) => {
-    logger.fatal(
-        { err: error },
-        "Uncaught exception",
-    );
-
-    process.exit(1);
-});
-
-process.on("unhandledRejection", (reason) => {
-    logger.fatal(
-        { err: reason },
-        "Unhandled promise rejection",
-    );
-
-    process.exit(1);
-});
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
 async function startServer() {
     try {
-        const rabbitMQChannel = await connectRabbitMQ();
+        const httpServer = createServer(app);
 
+        const io = createRealtimeServer(httpServer);
+
+        const rabbitMQChannel = await connectRabbitMQ();
         await setupRabbitMQTopology(rabbitMQChannel);
 
         registerRabbitMQRecoveryHandler(
-    async () => {
-        await startOrderConfirmationConsumer();
-        await startRefundConsumer();
-    },
-);
+            async () => {
+                await startOrderConfirmationConsumer();
+                await startRefundConsumer();
+                await startOrderRealtimeConsumer(io);
+            },
+        );
 
         await startOrderConfirmationConsumer();
         await startRefundConsumer();
+        await startOrderRealtimeConsumer(io);
+
         void startRefundReconciliationWorker();
 
-        server = app.listen(env.PORT, () => {
+        server = httpServer.listen(env.PORT, () => {
             logger.info(
                 {
                     port: env.PORT,
@@ -90,7 +64,7 @@ async function startServer() {
                 },
                 "Server started",
             );
-            
+
             void startOutboxWorker();
         });
     } catch (error) {

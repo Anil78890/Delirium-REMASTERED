@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 
-import { getRequestContext } from "../lib/requestContext.js";
-import { logger } from "../lib/logger.js";
+import { getRequestContext } from "../config/requestContext.js";
+import { logger } from "../config/logger.js";
 
 export const requestLoggerMiddleware = (
     req: Request,

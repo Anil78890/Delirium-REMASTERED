@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import type { Request, Response, NextFunction } from "express";
 
-import { logger } from "../lib/logger.js";
-import { requestContext } from "../lib/requestContext.js";
+import { logger } from "../config/logger.js";
+import { requestContext } from "../config/requestContext.js";
 
 export const requestIdMiddleware = (
     req: Request,

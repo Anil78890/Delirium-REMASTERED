@@ -1,4 +1,4 @@
-import { prisma } from "../../lib/prisma.js";
+import { prisma } from "../../config/prisma.js";
 import type { PrismaClient } from "../../generated/prisma/client.js";
 import { MAX_OUTBOX_ATTEMPTS } from "./outbox.retry.js";
 

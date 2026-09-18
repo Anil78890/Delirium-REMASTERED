@@ -1,6 +1,6 @@
 import { AppError } from "../../errors/AppError.js";
 import { ERROR_CODES } from "../../errors/errorCodes.js";
-import { prisma } from "../../lib/prisma.js";
+import { prisma } from "../../config/prisma.js";
 import type { PaymentGateway } from "./payment.gateway.js";
 import { paymentRepository } from "./payment.repository.js";
 import { refundRepository } from "./refund.repository.js";

@@ -6,8 +6,8 @@ import {
     getAdminOrders,
     getAdminOrderById,
     updateOrderStatus,
+    cancelOrder,
 } from "./order.controller.js";
-import { cancelOrder } from "./admin-order.controller.js";
 
 const router = Router();
 

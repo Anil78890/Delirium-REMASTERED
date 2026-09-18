@@ -10,6 +10,7 @@ export const RABBITMQ_EXCHANGES = {
 export const RABBITMQ_QUEUES = {
     ORDER_CONFIRMATION: "order.confirmation",
     REFUND_PROCESSING: "refund.processing",
+    ORDER_STATUS_REALTIME: "order.status.realtime",
 
     ORDER_CONFIRMATION_RETRY_5S:
         "order.confirmation.retry.5s",
@@ -40,6 +41,7 @@ export const RABBITMQ_QUEUES = {
 export const RABBITMQ_ROUTING_KEYS = {
     PAYMENT_SUCCESS: "payment.success",
     REFUND_REQUESTED: "refund.requested",
+    ORDER_STATUS_CHANGED: "order.status.changed",
 
     ORDER_CONFIRMATION_RETRY_5S:
         "order.confirmation.retry.5s",
