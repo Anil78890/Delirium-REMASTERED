@@ -1,11 +1,22 @@
 services:
-  rabbitmq:
-    image: rabbitmq:4-management
-    container_name: delirium-rabbitmq
-    restart: unless-stopped
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: delirium
-      RABBITMQ_DEFAULT_PASS: delirium_dev_password
+      rabbitmq:
+        image: rabbitmq:4-management
+        container_name: delirium-rabbitmq
+        restart: unless-stopped
+        ports:
+          - "5672:5672"
+          - "15672:15672"
+        environment:
+          RABBITMQ_DEFAULT_USER: delirium
+          RABBITMQ_DEFAULT_PASS: delirium_dev_password
+    
+      postgres:
+        image: postgres:15
+        container_name: delirium-postgres
+        restart: unless-stopped
+        ports:
+          - "5432:5432"
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: delirium

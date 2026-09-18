@@ -5,7 +5,7 @@
     "outDir": "./dist",
     "module": "nodenext",
     "target": "es2022",
-    "types": [],
+    "types": ["node"],
     "moduleResolution": "nodenext",
 
     // Other Outputs
