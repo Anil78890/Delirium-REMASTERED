@@ -4,8 +4,8 @@ import { ZodError } from "zod";
 import { AppError } from "../errors/AppError.js";
 import { ERROR_CODES } from "../errors/errorCodes.js";
 import { mapPrismaError } from "../errors/prismaErrorMapper.js";
-import { logger } from "../lib/logger.js";
-import { getRequestContext } from "../lib/requestContext.js";
+import { logger } from "../config/logger.js";
+import { getRequestContext } from "../config/requestContext.js";
 
 export const errorMiddleware: ErrorRequestHandler = (
     error,

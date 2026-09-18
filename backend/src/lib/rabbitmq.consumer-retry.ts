@@ -4,7 +4,7 @@ import {
     RABBITMQ_EXCHANGES,
     RABBITMQ_ROUTING_KEYS,
 } from "./rabbitmq.constants.js";
-import { logger } from "./logger.js";
+import { logger } from "../config/logger.js";
 
 type RetryConfig = {
     retryRoutingKeys: readonly string[];

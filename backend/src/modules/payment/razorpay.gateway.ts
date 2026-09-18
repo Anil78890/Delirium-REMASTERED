@@ -13,6 +13,8 @@ import type {
   VerifyWebhookSignatureInput,
 } from "./payment.gateway.js";
 import { validatePaymentVerification } from "razorpay/dist/utils/razorpay-utils.js";
+import { AppError } from "../../errors/AppError.js";
+import { ERROR_CODES } from "../../errors/errorCodes.js";
 
 export class RazorpayGateway implements PaymentGateway {
   private readonly razorpay: Razorpay;
@@ -114,9 +116,11 @@ export class RazorpayGateway implements PaymentGateway {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(
-      `Razorpay refund failed: ${response.status} ${JSON.stringify(data)}`,
-    );
+    throw new AppError(
+  ERROR_CODES.RAZORPAY_REFUND_CREATION_FAILED,
+  "Razorpay refund failed",
+  502,
+);
   }
 
   return {
@@ -149,9 +153,11 @@ export class RazorpayGateway implements PaymentGateway {
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(
-            `Razorpay refund fetch failed: ${response.status} ${JSON.stringify(data)}`,
-        );
+        throw new AppError(
+  ERROR_CODES.RAZORPAY_REFUND_FETCH_FAILED,
+  "Razorpay refund failed",
+  502,
+);
     }
 
     return {

@@ -1,4 +1,4 @@
-import { prisma } from "../../lib/prisma.js";
+import { prisma } from "../../config/prisma.js";
 import crypto from "node:crypto";
 
 import { paymentRepository } from "../payment/payment.repository.js";
@@ -130,12 +130,14 @@ export const orderService = {
     },
 
     async updateOrderStatus(
-        orderId: string,
-        newStatus: OrderStatus,
-    ) {
+    orderId: string,
+    newStatus: OrderStatus,
+) {
+    return prisma.$transaction(async (tx) => {
         const order =
             await orderRepository.findOrderById(
                 orderId,
+                tx,
             );
 
         if (!order) {
@@ -146,10 +148,6 @@ export const orderService = {
             );
         }
 
-
-   
-
-    
         const allowedStatuses =
             allowedOrderStatusTransitions[
                 order.status
@@ -168,6 +166,7 @@ export const orderService = {
                 orderId,
                 order.status,
                 newStatus,
+                tx,
             );
 
         if (result.count !== 1) {
@@ -178,9 +177,24 @@ export const orderService = {
             );
         }
 
+        await outboxRepository.createEvent(
+            {
+                eventType: "ORDER_STATUS_CHANGED",
+                aggregateType: "Order",
+                aggregateId: order.id,
+                payload: {
+                    orderId: order.id,
+                    previousStatus: order.status,
+                    newStatus,
+                },
+            },
+            tx,
+        );
+
         const updatedOrder =
             await orderRepository.findOrderById(
                 orderId,
+                tx,
             );
 
         if (!updatedOrder) {
@@ -192,19 +206,36 @@ export const orderService = {
         }
 
         return updatedOrder;
-    },
+    });
+},
 
-    async confirmOrderAfterPayment(
-        orderId: string,
-    ) {
+   async confirmOrderAfterPayment(
+    orderId: string,
+) {
+    return prisma.$transaction(async (tx) => {
         const result =
             await orderRepository.updateOrderStatus(
                 orderId,
                 "PENDING",
                 "CONFIRMED",
+                tx,
             );
 
         if (result.count === 1) {
+            await outboxRepository.createEvent(
+                {
+                    eventType: "ORDER_STATUS_CHANGED",
+                    aggregateType: "Order",
+                    aggregateId: orderId,
+                    payload: {
+                        orderId,
+                        previousStatus: "PENDING",
+                        newStatus: "CONFIRMED",
+                    },
+                },
+                tx,
+            );
+
             return {
                 confirmed: true,
             };
@@ -213,6 +244,7 @@ export const orderService = {
         const order =
             await orderRepository.findOrderById(
                 orderId,
+                tx,
             );
 
         if (!order) {
@@ -235,7 +267,8 @@ export const orderService = {
             `Order cannot be confirmed because its status is ${order.status}`,
             409,
         );
-    },
+    });
+},
 
 
    

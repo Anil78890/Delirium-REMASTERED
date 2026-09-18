@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 
 import { AppError } from "../../errors/AppError.js";
 import { ERROR_CODES } from "../../errors/errorCodes.js";
-import { prisma } from "../../lib/prisma.js";
+import { prisma } from "../../config/prisma.js";
 
 import { orderRepository } from "../order/order.repository.js";
 import { outboxRepository } from "./outbox.repository.js";

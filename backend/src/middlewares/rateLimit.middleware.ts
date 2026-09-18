@@ -2,7 +2,7 @@ import rateLimit from "express-rate-limit";
 
 export const apiRateLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
-    limit: 100, // 100 requests per IP per minute
+    limit: 10000, // 100 requests per IP per minute
 
     standardHeaders: "draft-8",
     legacyHeaders: false,

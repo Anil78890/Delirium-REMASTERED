@@ -11,6 +11,9 @@ export function getOutboxRoutingKey(
         case "REFUND_REQUESTED":
             return RABBITMQ_ROUTING_KEYS.REFUND_REQUESTED;
 
+
+        case "ORDER_STATUS_CHANGED":
+            return RABBITMQ_ROUTING_KEYS.ORDER_STATUS_CHANGED;    
         default:
             throw new Error(
                 `Unsupported outbox event type: ${eventType}`,

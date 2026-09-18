@@ -1,4 +1,4 @@
-import { prisma } from "../../lib/prisma.js";
+import { prisma } from "../../config/prisma.js";
 import type { PrismaClient } from "../../generated/prisma/client.js";
 import type { RefundStatus } from "../../generated/prisma/client.js";
 

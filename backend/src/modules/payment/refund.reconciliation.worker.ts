@@ -1,4 +1,4 @@
-import { logger } from "../../lib/logger.js";
+import { logger } from "../../config/logger.js";
 import { RazorpayGateway } from "./razorpay.gateway.js";
 import { refundService } from "./refund.service.js";
 
