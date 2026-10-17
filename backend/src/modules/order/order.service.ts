@@ -16,9 +16,19 @@ import {
 
 import type { OrderStatus } from "../../generated/prisma/client.js";
 import { outboxRepository } from "../payment/outbox.repository.js";
+import { env } from "../../config/env.js";
+import { calculateDistanceKm } from "../../utils/distance.js";
+
 
 export const orderService = {
-    async createOrder(userId: string) {
+    async createOrder(userId: string,
+         input: {
+        phoneNumber: string;
+        deliveryAddress: string;
+        latitude: number;
+        longitude: number;
+    },
+    ) {
     return prisma.$transaction(async (tx) => {
         await cartRepository.lockCartForCheckout(
             userId,
@@ -38,6 +48,26 @@ export const orderService = {
                 400,
             );
         }
+
+
+        const distanceKm = calculateDistanceKm(
+    {
+        latitude: env.RESTAURANT_LATITUDE,
+        longitude: env.RESTAURANT_LONGITUDE,
+    },
+    {
+        latitude: input.latitude,
+        longitude: input.longitude,
+    },
+);
+
+if (distanceKm > env.DELIVERY_RADIUS_KM) {
+    throw new AppError(
+        ERROR_CODES.VALIDATION_ERROR,
+        `Delivery is available only within ${env.DELIVERY_RADIUS_KM} km of the restaurant.`,
+        400,
+    );
+}
 
         let subtotalInPaise = 0;
 
@@ -79,6 +109,8 @@ export const orderService = {
             await orderRepository.createOrder(
                 {
                     userId,
+                    phoneNumber: input.phoneNumber,
+                    deliveryAddress: input.deliveryAddress,
                     subtotalInPaise,
                     totalInPaise: subtotalInPaise,
                     items,

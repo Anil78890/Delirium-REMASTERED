@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useCartContext } from "../../../context/CartContext";
@@ -13,9 +14,46 @@ import {
     verifyPayment,
 } from "../../../api/payment.api";
 
+import {
+    getAddresses,
+    type SavedAddress,
+} from "../../../api/address.api";
+
 import type { Order } from "../../../types/order.types";
 import type { RazorpayPaymentResponse } from "../../../types/razorpay.types";
 import { formatInr } from "../../../utils/currency";
+
+
+
+
+function calculateDistanceKm(
+    latitude1: number,
+    longitude1: number,
+    latitude2: number,
+    longitude2: number,
+): number {
+    const toRadians = (degrees: number) =>
+        (degrees * Math.PI) / 180;
+
+    const latitudeDifference = toRadians(latitude2 - latitude1);
+    const longitudeDifference = toRadians(longitude2 - longitude1);
+
+    const haversine =
+        Math.sin(latitudeDifference / 2) ** 2 +
+        Math.cos(toRadians(latitude1)) *
+            Math.cos(toRadians(latitude2)) *
+            Math.sin(longitudeDifference / 2) ** 2;
+
+    return (
+        6371 *
+        2 *
+        Math.atan2(
+            Math.sqrt(haversine),
+            Math.sqrt(1 - haversine),
+        )
+    );
+}
+
 
 export function CheckoutPage() {
     const {
@@ -24,29 +62,136 @@ export function CheckoutPage() {
         clearCartState,
     } = useCartContext();
 
-    const [isSubmitting, setIsSubmitting] =
-        useState(false);
 
-    const [isPaymentOpen, setIsPaymentOpen] =
-        useState(false);
+    const RESTAURANT_LATITUDE = 22.503053546678277;
+const RESTAURANT_LONGITUDE = 88.36097805582347;
+const DELIVERY_RADIUS_KM = 5;
 
-    const [createdOrder, setCreatedOrder] =
-        useState<Order | null>(null);
 
-    const [paymentMessage, setPaymentMessage] =
-        useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [paymentError, setPaymentError] =
-        useState<string | null>(null);
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [deliveryAddress, setDeliveryAddress] = useState("");
+
+    const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+    const [selectedAddressId, setSelectedAddressId] = useState("");
+    const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
+    const [addressLoadError, setAddressLoadError] = useState<string | null>(null);
+
+    const [customerLocation, setCustomerLocation] = useState<{
+        latitude: number;
+        longitude: number;
+    } | null>(null);
+
+
+    const deliveryDistanceKm = customerLocation
+    ? calculateDistanceKm(
+          RESTAURANT_LATITUDE,
+          RESTAURANT_LONGITUDE,
+          customerLocation.latitude,
+          customerLocation.longitude,
+      )
+    : null;
+
+const isDeliveryAvailable =
+    deliveryDistanceKm !== null &&
+    deliveryDistanceKm <= DELIVERY_RADIUS_KM;
+
+    const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+    const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+    const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
+
+   const isDeliveryDetailsValid =
+    /^\d{10,15}$/.test(phoneNumber.trim()) &&
+    deliveryAddress.trim().length >= 5 &&
+    customerLocation !== null &&
+    isDeliveryAvailable;
 
     const subtotalInPaise =
         cart?.items.reduce(
             (total, item) =>
-                total +
-                item.menuItem.priceInPaise *
-                    item.quantity,
+                total + item.menuItem.priceInPaise * item.quantity,
             0,
         ) ?? 0;
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadSavedAddresses() {
+            try {
+                setIsLoadingAddresses(true);
+                setAddressLoadError(null);
+
+                const addresses = await getAddresses();
+
+                if (cancelled) return;
+
+                setSavedAddresses(addresses);
+
+                const defaultAddress =
+                    addresses.find((address) => address.isDefault) ??
+                    addresses[0];
+
+                if (defaultAddress) {
+                    setSelectedAddressId(defaultAddress.id);
+                    setPhoneNumber(defaultAddress.phoneNumber);
+                    setDeliveryAddress(defaultAddress.addressLine);
+
+                    setCustomerLocation({
+                        latitude: defaultAddress.latitude,
+                        longitude: defaultAddress.longitude,
+                    });
+                }
+            } catch (error) {
+                if (cancelled) return;
+
+                console.error(
+                    "Failed to load saved addresses:",
+                    error,
+                );
+
+                setAddressLoadError(
+                    "Could not load your saved addresses. Please try again or visit your profile to manage them.",
+                );
+            } finally {
+                if (!cancelled) {
+                    setIsLoadingAddresses(false);
+                }
+            }
+        }
+
+        void loadSavedAddresses();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    function handleAddressSelection(addressId: string) {
+        setSelectedAddressId(addressId);
+
+        if (!addressId) {
+            setPhoneNumber("");
+            setDeliveryAddress("");
+            setCustomerLocation(null);
+            return;
+        }
+
+        const selectedAddress = savedAddresses.find(
+            (address) => address.id === addressId,
+        );
+
+        if (!selectedAddress) return;
+
+        setPhoneNumber(selectedAddress.phoneNumber);
+        setDeliveryAddress(selectedAddress.addressLine);
+
+        setCustomerLocation({
+            latitude: selectedAddress.latitude,
+            longitude: selectedAddress.longitude,
+        });
+    }
 
     if (isLoading) {
         return (
@@ -192,6 +337,121 @@ export function CheckoutPage() {
                 </Link>
             </div>
 
+            <div className="checkout-page__delivery">
+                <h2>Delivery Details</h2>
+
+                <div className="checkout-page__field">
+                    <label htmlFor="savedAddress">
+                        Choose a Saved Address
+                    </label>
+
+                    <select
+                        id="savedAddress"
+                        value={selectedAddressId}
+                        onChange={(event) =>
+                            handleAddressSelection(event.target.value)
+                        }
+                        disabled={isLoadingAddresses}
+                    >
+                        <option value="">
+                            Select a saved address
+                        </option>
+
+                        {savedAddresses.map((address) => (
+                            <option
+                                key={address.id}
+                                value={address.id}
+                            >
+                                {address.label}
+                                {address.isDefault ? " (Default)" : ""}
+                                {" — "}
+                                {address.addressLine}
+                            </option>
+                        ))}
+                    </select>
+
+                    {isLoadingAddresses && (
+                        <p role="status">
+                            Loading your saved addresses...
+                        </p>
+                    )}
+
+                    {addressLoadError && (
+                        <p role="alert">
+                            {addressLoadError}
+                        </p>
+                    )}
+
+                    {!isLoadingAddresses &&
+                        savedAddresses.length === 0 && (
+                            <p>
+                                You have no saved addresses.{" "}
+                                <Link to="/profile">
+                                    Add an address in your profile
+                                </Link>
+                                {" "}before checking out.
+                            </p>
+                        )}
+
+                    <p>
+                        Need to add or manage addresses?{" "}
+                        <Link to="/profile">
+                            Manage saved addresses
+                        </Link>
+                    </p>
+                </div>
+
+                <div className="checkout-page__field">
+                    <label htmlFor="phoneNumber">
+                        Phone Number{" "}
+                        <span className="required-asterisk">*</span>
+                    </label>
+
+                    <input
+                        id="phoneNumber"
+                        name="phoneNumber"
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={(event) => {
+                            setPhoneNumber(event.target.value);
+                        }}
+                        placeholder="Enter your phone number"
+                        autoComplete="tel"
+                        inputMode="numeric"
+                        maxLength={15}
+                        required
+                    />
+                </div>
+
+                <div className="checkout-page__field">
+                    <label htmlFor="deliveryAddress">
+                        Full Delivery Address{" "}
+                        <span className="required-asterisk">*</span>
+                    </label>
+
+                   
+<textarea
+    id="deliveryAddress"
+    name="deliveryAddress"
+    value={deliveryAddress}
+    placeholder="Select a saved address"
+    autoComplete="street-address"
+    rows={4}
+    readOnly
+    required
+/>
+
+
+                    {deliveryDistanceKm !== null && (
+    <p role="status">
+        {isDeliveryAvailable
+            ? `Delivery available — approximately ${deliveryDistanceKm.toFixed(2)} km from the restaurant.`
+            : `Delivery unavailable — approximately ${deliveryDistanceKm.toFixed(2)} km away. Delivery is limited to ${DELIVERY_RADIUS_KM} km.`}
+    </p>
+)}
+                </div>
+            </div>
+
             <div className="checkout-page__content">
                 <div className="checkout-page__items">
                     <h2 className="checkout-page__section-title">
@@ -241,46 +501,46 @@ export function CheckoutPage() {
                         className="checkout-page__submit"
                         disabled={
                             isSubmitting ||
-                            isPaymentOpen
+                            isPaymentOpen ||
+                            isLoadingAddresses ||
+                            !isDeliveryDetailsValid
                         }
                         onClick={async () => {
                             try {
                                 setIsSubmitting(true);
 
-                                const order =
-                                    await createOrder();
+                                if (!customerLocation) {
+                                    throw new Error(
+                                        "Please select a saved address before placing your order.",
+                                    );
+                                }
+
+                                const order = await createOrder({
+                                    phoneNumber: phoneNumber.trim(),
+                                    deliveryAddress: deliveryAddress.trim(),
+                                    latitude: customerLocation.latitude,
+                                    longitude: customerLocation.longitude,
+                                });
 
                                 const paymentOrder =
-                                    await createPaymentOrder(
-                                        order.id,
-                                    );
+                                    await createPaymentOrder(order.id);
 
                                 const razorpayOptions = {
                                     key: import.meta.env
                                         .VITE_RAZORPAY_KEY_ID,
 
-                                    amount:
-                                        paymentOrder.amountInPaise,
-
-                                    currency:
-                                        paymentOrder.currency,
-
+                                    amount: paymentOrder.amountInPaise,
+                                    currency: paymentOrder.currency,
                                     name: "DELIRIUM",
-
-                                    description:
-                                        `Order ${order.id}`,
-
-                                    order_id:
-                                        paymentOrder.gatewayOrderId,
+                                    description: `Order ${order.id}`,
+                                    order_id: paymentOrder.gatewayOrderId,
 
                                     handler: async (
                                         response: RazorpayPaymentResponse,
                                     ) => {
                                         try {
                                             const verification =
-                                                await verifyPayment(
-                                                    response,
-                                                );
+                                                await verifyPayment(response);
 
                                             clearCartState();
 
@@ -293,9 +553,7 @@ export function CheckoutPage() {
                                                 confirmedOrder.status ===
                                                 "CONFIRMED"
                                             ) {
-                                                setCreatedOrder(
-                                                    confirmedOrder,
-                                                );
+                                                setCreatedOrder(confirmedOrder);
                                             } else {
                                                 setPaymentMessage(
                                                     "Your payment was received, but your order is still being processed.",
@@ -339,19 +597,12 @@ export function CheckoutPage() {
                                 };
 
                                 const razorpay =
-                                    new window.Razorpay(
-                                        razorpayOptions,
-                                    );
+                                    new window.Razorpay(razorpayOptions);
 
                                 razorpay.open();
-
                                 setIsPaymentOpen(true);
 
-                                console.log(
-                                    "Order created:",
-                                    order,
-                                );
-
+                                console.log("Order created:", order);
                                 console.log(
                                     "Payment order created:",
                                     paymentOrder,
@@ -366,15 +617,14 @@ export function CheckoutPage() {
                             }
                         }}
                     >
-                       {isPaymentOpen ? 
-                       "Payment in Progress..." 
-                       : isSubmitting
-                        ? "Creating Order..." 
-                        : "Place Order & Pay"}
+                        {isPaymentOpen
+                            ? "Payment in Progress..."
+                            : isSubmitting
+                              ? "Creating Order..."
+                              : "Place Order & Pay"}
                     </button>
                 </aside>
             </div>
         </section>
     );
 }
-

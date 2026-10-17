@@ -1,7 +1,8 @@
+
+
 import { Link } from "react-router-dom";
+
 import { useAuth } from "../../../../hooks/useAuth";
-
-
 
 interface CustomerHeaderProps {
     cartItemCount: number;
@@ -41,17 +42,58 @@ export function CustomerHeader({
                     className="site-header__nav"
                     aria-label="Main navigation"
                 >
-                    <Link to="/menu">Menu</Link>
-                    <Link to="/featured">Featured</Link>
-                    <Link to="/about">About</Link>
+                    <Link to="/menu">
+                        Menu
+                    </Link>
+
+                    <Link
+                        to="/"
+                        onClick={() => {
+                            window.setTimeout(() => {
+                                document
+                                    .getElementById("featured")
+                                    ?.scrollIntoView({
+                                        behavior: "smooth",
+                                    });
+                            }, 0);
+                        }}
+                    >
+                        Featured
+                    </Link>
+
+                    <Link
+                        to="/"
+                        onClick={() => {
+                            window.setTimeout(() => {
+                                document
+                                    .getElementById("about")
+                                    ?.scrollIntoView({
+                                        behavior: "smooth",
+                                    });
+                            }, 0);
+                        }}
+                    >
+                        About
+                    </Link>
                 </nav>
 
                 <div className="site-header__actions">
-                    {isAuthenticated && (
-                        <span className="site-header__user">
-                            {user?.name}
-                        </span>
-                    )}
+                   {isAuthenticated && user?.name && (
+    <>
+        <span className="site-header__user">
+            {user.name}
+        </span>
+
+        {user.role === "CUSTOMER" && (
+            <Link
+                to="/profile"
+                className="site-header__profile"
+            >
+                Profile
+            </Link>
+        )}
+    </>
+)}
 
                     {isAuthenticated && (
                         <button
@@ -65,21 +107,24 @@ export function CustomerHeader({
                         </button>
                     )}
 
-                   <Link
-    to="/cart"
-    className="site-header__cart"
-    aria-label={`Cart with ${cartItemCount} items`}
->
-    Cart
+                    <Link
+                        to="/cart"
+                        className="site-header__cart"
+                        aria-label={`Cart with ${cartItemCount} items`}
+                    >
+                        <span>
+                            Cart
+                        </span>
 
-    {cartItemCount > 0 && (
-        <span className="site-header__cart-count">
-            {cartItemCount}
-        </span>
-    )}
-</Link>
+                        {cartItemCount > 0 && (
+                            <span className="site-header__cart-count">
+                                {cartItemCount}
+                            </span>
+                        )}
+                    </Link>
                 </div>
             </div>
         </header>
     );
 }
+

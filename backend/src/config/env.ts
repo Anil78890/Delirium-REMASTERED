@@ -32,6 +32,14 @@ const envSchema = z.object({
 
     FRONTEND_URL: z.string().url(),
 
+    
+    RESTAURANT_LATITUDE: z.coerce.number().min(-90).max(90),
+
+    RESTAURANT_LONGITUDE: z.coerce.number().min(-180).max(180),
+
+    DELIVERY_RADIUS_KM: z.coerce.number().positive().default(5),
+
+
     JWT_ACCESS_TOKEN_EXPIRY: z
         .string()
         .min(1)

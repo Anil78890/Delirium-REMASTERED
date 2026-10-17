@@ -14,9 +14,16 @@
 @import "./styles/cart-page.css";
 @import "./styles/checkout-page.css";
 @import "./styles/orders-page.css";
+@import "./styles/login.css";
+@import "./styles/profile-page.css";
+@import "./styles/DeliveryLocationMap.css";
 
 * {
     box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 html,
@@ -31,6 +38,7 @@ body {
     color: var(--color-text);
 
     font-family: var(--font-body);
+    line-height: 1.5;
 
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -50,4 +58,18 @@ button {
 img {
     display: block;
     max-width: 100%;
+}
+
+a {
+    color: inherit;
+}
+
+::selection {
+    background: var(--color-accent);
+    color: var(--color-ink);
+}
+
+:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 3px;
 }

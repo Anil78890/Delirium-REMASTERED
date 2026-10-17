@@ -10,25 +10,25 @@ export function PopularCravingsSection({
     menuItems,
 }: PopularCravingsSectionProps) {
     const popularItemNames = [
-    "The Kunafa Delirium",
-    "Crispy Paneer Waffwich",
-    "The Kaccha Aam Zinger",
-    "Brownie Sundae",
-];
+        "The Kunafa Delirium",
+        "Crispy Paneer Waffwich",
+        "The Kaccha Aam Zinger",
+        "Brownie Sundae",
+    ];
 
-const popularItems = popularItemNames
-    .map((name) =>
-        menuItems.find(
-            (menuItem) =>
-                menuItem.name === name &&
-                menuItem.isActive &&
-                menuItem.isAvailable,
-        ),
-    )
-    .filter(
-        (menuItem): menuItem is MenuItem =>
-            menuItem !== undefined,
-    );
+    const popularItems = popularItemNames
+        .map((name) =>
+            menuItems.find(
+                (menuItem) =>
+                    menuItem.name === name &&
+                    menuItem.isActive &&
+                    menuItem.isAvailable,
+            ),
+        )
+        .filter(
+            (menuItem): menuItem is MenuItem =>
+                menuItem !== undefined,
+        );
 
     return (
         <section
@@ -59,10 +59,10 @@ const popularItems = popularItemNames
             <div className="popular-cravings__grid">
                 {popularItems.map((menuItem) => (
                     <Link
-    key={menuItem.id}
-    to={`/menu?item=${menuItem.id}`}
-    className="popular-cravings__item"
->
+                        key={menuItem.id}
+                        to={`/menu?item=${menuItem.id}`}
+                        className="popular-cravings__item"
+                    >
                         <div className="popular-cravings__image-wrapper">
                             <img
                                 src={menuItem.imageUrl!}

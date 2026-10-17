@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import {
     getCategories,
@@ -15,6 +15,7 @@ import { CategoryNavigation } from "../components/CategoryNavigation";
 import { MenuItemList } from "../components/MenuItemList";
 
 import { useCartContext } from "../../../context/CartContext";
+import { useAuth } from "../../../hooks/useAuth";
 
 export function MenuPage() {
     const [categories, setCategories] = useState<Category[]>([]);
@@ -34,7 +35,35 @@ export function MenuPage() {
         useState<string | null>(null);
 
     const { addItem } = useCartContext();
+    const navigate = useNavigate();
 
+const {
+    isAuthenticated,
+    isLoading: isAuthLoading,
+} = useAuth();
+
+
+async function handleAddToCart(menuItem: MenuItem) {
+    if (isAuthLoading) {
+        return;
+    }
+
+    if (!isAuthenticated) {
+        navigate("/login", {
+            state: {
+                from: `/menu?item=${menuItem.id}`,
+            },
+        });
+
+        return;
+    }
+
+    try {
+        await addItem(menuItem);
+    } catch (error) {
+        console.error("Failed to add item to cart:", error);
+    }
+}
     useEffect(() => {
         let isMounted = true;
 
@@ -162,7 +191,7 @@ export function MenuPage() {
 
                 <MenuItemList
                     menuItems={filteredMenuItems}
-                    onAdd={addItem}
+                    onAdd={handleAddToCart}
                     selectedItemId={selectedItemId}
                 />
             </section>

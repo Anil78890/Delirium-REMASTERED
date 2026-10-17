@@ -3,6 +3,14 @@ import type { Order } from "../types/order.types";
 
 
 
+type CreateOrderInput = {
+    phoneNumber: string;
+    deliveryAddress: string;
+    latitude: number;
+    longitude: number;
+};
+
+
 interface CreateOrderResponse {
     success: boolean;
     data: {
@@ -24,9 +32,15 @@ interface GetOrdersResponse {
     };
 }
 
-export async function createOrder(): Promise<Order> {
+
+export async function createOrder(
+    input: CreateOrderInput,
+): Promise<Order> {
     const response =
-        await apiClient.post<CreateOrderResponse>("/order/");
+        await apiClient.post<CreateOrderResponse>(
+            "/order/",
+            input,
+        );
 
     return response.data.data.order;
 }

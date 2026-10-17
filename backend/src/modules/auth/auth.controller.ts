@@ -112,13 +112,39 @@ export async function getMe(
 /**
  * Starts Google OAuth.
  */
+
+/**
+ * Starts Google OAuth.
+ */
 export function googleLogin(
     req: Request,
     res: Response,
 ) {
     const state = crypto.randomBytes(32).toString("hex");
 
+    const requestedReturnTo =
+        typeof req.query.returnTo === "string"
+            ? req.query.returnTo
+            : "";
+
+    // Accept only relative paths on our frontend.
+    const returnTo =
+        requestedReturnTo.startsWith("/") &&
+        !requestedReturnTo.startsWith("//") &&
+        !requestedReturnTo.includes("\\") &&
+        !requestedReturnTo.includes("\r") &&
+        !requestedReturnTo.includes("\n")
+            ? requestedReturnTo
+            : "/";
+
     res.cookie("google_oauth_state", state, {
+        httpOnly: true,
+        secure: env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 10 * 60 * 1000,
+    });
+
+    res.cookie("google_oauth_return_to", returnTo, {
         httpOnly: true,
         secure: env.NODE_ENV === "production",
         sameSite: "lax",
@@ -151,6 +177,7 @@ export async function googleCallback(
     const { code, state } = req.query;
 
     const savedState = req.cookies.google_oauth_state;
+    const savedReturnTo = req.cookies.google_oauth_return_to;
 
    res.clearCookie("google_oauth_state", {
     httpOnly: true,
@@ -158,6 +185,11 @@ export async function googleCallback(
     sameSite: "lax",
 });
 
+   res.clearCookie("google_oauth_return_to", {
+    httpOnly: true,
+    secure: env.NODE_ENV === "production",
+    sameSite: "lax",
+});
     /*
      * Validate OAuth state before doing anything with
      * the authorization code.
@@ -253,5 +285,15 @@ export async function googleCallback(
     path: "/api/v1/auth",
 });
 
-return res.redirect(`${env.FRONTEND_URL}/auth/callback`);
+const returnTo =
+    typeof savedReturnTo === "string" &&
+    savedReturnTo.startsWith("/") &&
+    !savedReturnTo.startsWith("//") &&
+    !savedReturnTo.includes("\\")
+        ? savedReturnTo
+        : "/";
+
+return res.redirect(
+    `${env.FRONTEND_URL}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`,
+);
 }

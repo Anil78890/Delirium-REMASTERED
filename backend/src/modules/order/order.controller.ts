@@ -16,8 +16,11 @@ export async function createOrder(
     req: Request,
     res: Response,
 ) {
+    const input = createOrderSchema.parse(req.body);
+
     const order = await orderService.createOrder(
         req.user!.id,
+        input,
     );
 
     return res.status(201).json({

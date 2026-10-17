@@ -209,13 +209,15 @@ const menuItems = [
     {
         categoryName: "THE SOLID HALLUCINATIONS",
         name: "Melted Pizza Waffle (Veg)",
-        description: "Cheesy vegetable pizza toppings on a crispy waffle.",
+        description:
+            "Cheesy vegetable pizza toppings on a crispy waffle.",
         priceInPaise: 9900,
     },
     {
         categoryName: "THE SOLID HALLUCINATIONS",
         name: "Melted Pizza Waffle (Chicken Sausage)",
-        description: "Cheesy pizza waffle topped with chicken sausage.",
+        description:
+            "Cheesy pizza waffle topped with chicken sausage.",
         priceInPaise: 10900,
     },
 
@@ -226,25 +228,29 @@ const menuItems = [
     {
         categoryName: "THE HANDHELD DELUSIONS",
         name: "Creamy Chicken Wrap",
-        description: "Creamy chicken filling wrapped in a soft tortilla.",
+        description:
+            "Creamy chicken filling wrapped in a soft tortilla.",
         priceInPaise: 7900,
     },
     {
         categoryName: "THE HANDHELD DELUSIONS",
         name: "Creamy Tikka Chicken Wrap",
-        description: "Creamy chicken tikka wrapped with fresh ingredients.",
+        description:
+            "Creamy chicken tikka wrapped with fresh ingredients.",
         priceInPaise: 6900,
     },
     {
         categoryName: "THE HANDHELD DELUSIONS",
         name: "Creamy Paneer Wrap",
-        description: "Creamy paneer filling wrapped in a soft tortilla.",
+        description:
+            "Creamy paneer filling wrapped in a soft tortilla.",
         priceInPaise: 6900,
     },
     {
         categoryName: "THE HANDHELD DELUSIONS",
         name: "Crunchy Chicken Wrap",
-        description: "Crunchy chicken with fresh fillings in a soft wrap.",
+        description:
+            "Crunchy chicken with fresh fillings in a soft wrap.",
         priceInPaise: 6900,
     },
 
@@ -255,25 +261,29 @@ const menuItems = [
     {
         categoryName: "THE TOASTED CRAVINGS",
         name: "Pepper-Mayo Chicken Sandwich",
-        description: "Chicken sandwich with creamy pepper mayo.",
+        description:
+            "Chicken sandwich with creamy pepper mayo.",
         priceInPaise: 6900,
     },
     {
         categoryName: "THE TOASTED CRAVINGS",
         name: "Creamy Tikka Chicken Sandwich",
-        description: "Creamy chicken tikka layered between toasted bread.",
+        description:
+            "Creamy chicken tikka layered between toasted bread.",
         priceInPaise: 6900,
     },
     {
         categoryName: "THE TOASTED CRAVINGS",
         name: "Cheesy Creamy Chicken Sandwich",
-        description: "Creamy chicken sandwich loaded with cheese.",
+        description:
+            "Creamy chicken sandwich loaded with cheese.",
         priceInPaise: 7900,
     },
     {
         categoryName: "THE TOASTED CRAVINGS",
         name: "The Fresh Veggie Awakening",
-        description: "Fresh vegetables and creamy filling in toasted bread.",
+        description:
+            "Fresh vegetables and creamy filling in toasted bread.",
         priceInPaise: 4900,
     },
 
@@ -284,25 +294,29 @@ const menuItems = [
     {
         categoryName: "THE CRISPY MIRAGES",
         name: "DELIRIUM'S SIGNATURE FRIES",
-        description: "Crispy golden fries with your choice of seasoning.",
+        description:
+            "Crispy golden fries with your choice of seasoning.",
         priceInPaise: 4900,
     },
     {
         categoryName: "THE CRISPY MIRAGES",
         name: "Loaded Nachos (Veg)",
-        description: "Crispy nachos loaded with cheesy vegetable toppings.",
+        description:
+            "Crispy nachos loaded with cheesy vegetable toppings.",
         priceInPaise: 6900,
     },
     {
         categoryName: "THE CRISPY MIRAGES",
         name: "Chicken Popcorn",
-        description: "Bite-sized crispy chicken pieces.",
+        description:
+            "Bite-sized crispy chicken pieces.",
         priceInPaise: 9900,
     },
     {
         categoryName: "THE CRISPY MIRAGES",
         name: "Paneer Tikka Skewers",
-        description: "Char-grilled paneer tikka served on skewers.",
+        description:
+            "Char-grilled paneer tikka served on skewers.",
         priceInPaise: 3900,
     },
 
@@ -313,25 +327,29 @@ const menuItems = [
     {
         categoryName: "THE MACRO STATES",
         name: "Classic Masala Maggi",
-        description: "Classic masala Maggi noodles.",
+        description:
+            "Classic masala Maggi noodles.",
         priceInPaise: 3900,
     },
     {
         categoryName: "THE MACRO STATES",
         name: "White Sauce Maggi",
-        description: "Creamy white sauce Maggi noodles.",
+        description:
+            "Creamy white sauce Maggi noodles.",
         priceInPaise: 5900,
     },
     {
         categoryName: "THE MACRO STATES",
         name: "Red Sauce Maggi",
-        description: "Tangy red sauce Maggi noodles.",
+        description:
+            "Tangy red sauce Maggi noodles.",
         priceInPaise: 4900,
     },
     {
         categoryName: "THE MACRO STATES",
         name: "Korean Spiced Maggi",
-        description: "Spicy Korean-style Maggi noodles.",
+        description:
+            "Spicy Korean-style Maggi noodles.",
         priceInPaise: 4900,
     },
 
@@ -342,25 +360,29 @@ const menuItems = [
     {
         categoryName: "THE WAFFLE PARADOX",
         name: "The Kunafa Delirium",
-        description: "Sweet waffle inspired by rich kunafa flavors.",
+        description:
+            "Sweet waffle inspired by rich kunafa flavors.",
         priceInPaise: 11900,
     },
     {
         categoryName: "THE WAFFLE PARADOX",
         name: "The Indigo Awakening",
-        description: "Sweet and indulgent signature dessert waffle.",
+        description:
+            "Sweet and indulgent signature dessert waffle.",
         priceInPaise: 6900,
     },
     {
         categoryName: "THE WAFFLE PARADOX",
         name: "The Dual Mirage",
-        description: "A delicious combination of two sweet flavors.",
+        description:
+            "A delicious combination of two sweet flavors.",
         priceInPaise: 7900,
     },
     {
         categoryName: "THE WAFFLE PARADOX",
         name: "The Peanut Butter Paradox",
-        description: "Rich peanut butter dessert waffle.",
+        description:
+            "Rich peanut butter dessert waffle.",
         priceInPaise: 5900,
     },
 
@@ -378,29 +400,161 @@ const menuItems = [
     {
         categoryName: "THE FROZEN PARADOX",
         name: "The Frozen Delusions",
-        description: "Ice cream served in a crisp waffle bowl.",
+        description:
+            "Ice cream served in a crisp waffle bowl.",
         priceInPaise: 3500,
     },
     {
         categoryName: "THE FROZEN PARADOX",
         name: "Chocolate Ice Cream",
-        description: "Rich and creamy chocolate ice cream.",
+        description:
+            "Rich and creamy chocolate ice cream.",
         priceInPaise: 3500,
     },
     {
         categoryName: "THE FROZEN PARADOX",
         name: "Butterscotch Ice Cream",
-        description: "Creamy butterscotch ice cream with a sweet finish.",
+        description:
+            "Creamy butterscotch ice cream with a sweet finish.",
         priceInPaise: 3500,
     },
 ];
 
+const imageUrls: Record<string, string> = {
+    // Drinks
+    "The Minty Blueberry Awakening":
+        "https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=800&q=85",
 
-const localImageUrls: Record<string, string> = {
-    "The Kunafa Delirium": "/images/menu/kunafa-delirium.jpg",
-    "Crispy Paneer Waffwich": "/images/menu/crispy-paneer-waffwich.jpg",
-    "The Kaccha Aam Zinger": "/images/menu/kaccha-aam-zinger.jpg",
-    "Brownie Sundae": "/images/menu/brownie-sundae.jpg",
+    "The Hibiscus Watermelon Mirage":
+        "https://images.unsplash.com/photo-1497534446932-c925b458314e?auto=format&fit=crop&w=800&q=85",
+
+    "The Jasmine Apple Illusion":
+        "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=800&q=85",
+
+    "The Saffron Orange Trance":
+        "https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=800&q=85",
+
+    "The Kaccha Aam Zinger":
+        "https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?auto=format&fit=crop&w=800&q=85",
+
+    "The Blue Ginger Delusion":
+        "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=85",
+
+    "The Watermelon Mint Mojito":
+        "https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=800&q=85",
+
+    "The Blueberry Mint Mojito":
+        "https://images.unsplash.com/photo-1497534446932-c925b458314e?auto=format&fit=crop&w=800&q=85",
+
+    "The KitKat Crunch Trance":
+        "https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=800&q=85",
+
+    "The Paradox Shake":
+        "https://images.unsplash.com/photo-1553530666-ba11a7da3888?auto=format&fit=crop&w=800&q=85",
+
+    "Protein Smoothie Bowl":
+        "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=85",
+
+    "The Vanilla Illusion":
+        "https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=800&q=85",
+
+    "Teabox Wellness Green Tea":
+        "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=800&q=85",
+
+    "The Golden Delirium Latte":
+        "https://images.unsplash.com/photo-1572449043416-55f4685c9bb7?auto=format&fit=crop&w=800&q=85",
+
+    "The Boosted Awakening":
+        "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=85",
+
+    "The Delusion Hot Chocolate":
+        "https://images.unsplash.com/photo-1542990253-0b7d5b1d7c3e?auto=format&fit=crop&w=800&q=85",
+
+    // Savory food
+    "Crispy Chicken Waffwich":
+        "https://images.unsplash.com/photo-1562967916-eb82221dfb92?auto=format&fit=crop&w=800&q=85",
+
+    "Crispy Paneer Waffwich":
+        "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=800&q=85",
+
+    "Melted Pizza Waffle (Veg)":
+        "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=85",
+
+    "Melted Pizza Waffle (Chicken Sausage)":
+        "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=85",
+
+    "Creamy Chicken Wrap":
+        "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=800&q=85",
+
+    "Creamy Tikka Chicken Wrap":
+        "https://images.unsplash.com/photo-1565299507177-b0ac66763828?auto=format&fit=crop&w=800&q=85",
+
+    "Creamy Paneer Wrap":
+        "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=85",
+
+    "Crunchy Chicken Wrap":
+        "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=800&q=85",
+
+    "Pepper-Mayo Chicken Sandwich":
+        "https://images.unsplash.com/photo-1553909489-cd47e0907980?auto=format&fit=crop&w=800&q=85",
+
+    "Creamy Tikka Chicken Sandwich":
+        "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=800&q=85",
+
+    "Cheesy Creamy Chicken Sandwich":
+        "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=800&q=85",
+
+    "The Fresh Veggie Awakening":
+        "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=85",
+
+    "DELIRIUM'S SIGNATURE FRIES":
+        "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=800&q=85",
+
+    "Loaded Nachos (Veg)":
+        "https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?auto=format&fit=crop&w=800&q=85",
+
+    "Chicken Popcorn":
+        "https://images.unsplash.com/photo-1562967916-eb82221dfb92?auto=format&fit=crop&w=800&q=85",
+
+    "Paneer Tikka Skewers":
+        "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?auto=format&fit=crop&w=800&q=85",
+
+    "Classic Masala Maggi":
+        "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=800&q=85",
+
+    "White Sauce Maggi":
+        "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&w=800&q=85",
+
+    "Red Sauce Maggi":
+        "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=800&q=85",
+
+    "Korean Spiced Maggi":
+        "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=800&q=85",
+
+    // Sweet waffles & desserts
+    "The Kunafa Delirium":
+        "https://images.unsplash.com/photo-1562376552-0d160a2f238d?auto=format&fit=crop&w=800&q=85",
+
+    "The Indigo Awakening":
+        "https://images.unsplash.com/photo-1562376552-0d160a2f238d?auto=format&fit=crop&w=800&q=85",
+
+    "The Dual Mirage":
+        "https://images.unsplash.com/photo-1562376552-0d160a2f238d?auto=format&fit=crop&w=800&q=85",
+
+    "The Peanut Butter Paradox":
+        "https://images.unsplash.com/photo-1562376552-0d160a2f238d?auto=format&fit=crop&w=800&q=85",
+
+    "Brownie Sundae":
+        "https://images.unsplash.com/photo-1562376552-0d160a2f238d?auto=format&fit=crop&w=800&q=85",
+
+    "The Frozen Delusions":
+        "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=85",
+
+    "Chocolate Ice Cream":
+        "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=85",
+
+    "Butterscotch Ice Cream":
+        "https://images.unsplash.com/photo-1570197788417-0e82375c9371?auto=format&fit=crop&w=800&q=85",
 };
 
 async function main() {
@@ -409,9 +563,21 @@ async function main() {
     /*
      * Development database only.
      *
-     * Remove existing menu data so that running the seed repeatedly
-     * does not create duplicate categories/menu items.
+     * Delete dependent records first because:
+     *
+     * CartItem  -> MenuItem
+     * OrderItem -> MenuItem
+     * MenuItem  -> Category
+     *
+     * This allows the menu/categories to be completely replaced.
+     *
+     * WARNING:
+     * This removes existing cart items and order items.
+     * Do NOT use this destructive reset against production data.
      */
+
+    await prisma.cartItem.deleteMany();
+    await prisma.orderItem.deleteMany();
     await prisma.menuItem.deleteMany();
     await prisma.category.deleteMany();
 
@@ -432,7 +598,7 @@ async function main() {
         console.log(`Created category: ${category.name}`);
     }
 
-    for (const [index, menuItem] of menuItems.entries()) {
+    for (const menuItem of menuItems) {
         const categoryId = categoryMap.get(menuItem.categoryName);
 
         if (!categoryId) {
@@ -441,14 +607,20 @@ async function main() {
             );
         }
 
+        const imageUrl = imageUrls[menuItem.name];
+
+        if (!imageUrl) {
+            throw new Error(
+                `Image URL not found for menu item: ${menuItem.name}`,
+            );
+        }
+
         await prisma.menuItem.create({
             data: {
                 categoryId,
                 name: menuItem.name,
                 description: menuItem.description,
-            imageUrl:
-    localImageUrls[menuItem.name] ??
-    `https://picsum.photos/seed/delirium-${index + 1}/600/400`,
+                imageUrl,
                 priceInPaise: menuItem.priceInPaise,
                 isActive: true,
                 isAvailable: true,

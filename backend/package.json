@@ -8,7 +8,8 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "db:migrate": "npx prisma migrate dev --name init",
-    "db:generate": "npx prisma generate"
+    "db:generate": "npx prisma generate",
+    "db:seed": "tsx prisma/seeds.ts"
   },
   "keywords": [],
   "author": "",

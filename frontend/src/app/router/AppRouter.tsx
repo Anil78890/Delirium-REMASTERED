@@ -1,4 +1,5 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 
 import { AuthProvider } from "../../context/AuthContext";
 
@@ -15,30 +16,44 @@ import { MenuPage } from "../../features/menu/pages/MenuPage";
 import { CartPage } from "../../features/cart/pages/CartPage";
 import { CheckoutPage } from "../../features/checkout/pages/CheckoutPage";
 import { OrdersPage } from "../../features/order/pages/OrderPage";
+import { ScrollToTop } from "../../components/ScrollToTop";
+import { ProfilePage } from "../../features/profile/pages/ProfilePage";
 
 function LoginPage() {
+
+
+    const location = useLocation();
+
+const returnTo =
+    typeof location.state?.from === "string"
+        ? location.state.from
+        : "/";
+
+
     function handleGoogleLogin() {
         const apiBaseUrl =
             import.meta.env.VITE_API_BASE_URL.replace(/\/$/, "");
 
-        window.location.href =
-            `${apiBaseUrl}/auth/google`;
+       window.location.href =
+    `${apiBaseUrl}/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
     }
 
     return (
-        <div>
-            <h2>Login</h2>
+        <div className="login-page">
+            <div className="login-card">
+                <h2>Welcome back</h2>
+                <p>Sign in to continue to your account.</p>
 
-            <button
-                type="button"
-                onClick={handleGoogleLogin}
-            >
-                Continue with Google
-            </button>
+                <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                >
+                    Continue with Google
+                </button>
+            </div>
         </div>
     );
 }
-
 
 function AdminDashboardPage() {
     return <h2>Admin Dashboard</h2>;
@@ -51,8 +66,17 @@ function NotFoundPage() {
 export function AppRouter() {
     return (
         <BrowserRouter>
+            <ScrollToTop />
             <AuthProvider>
                 <Routes>
+                    {/* Standalone login page — outside CustomerLayout */}
+                    <Route element={<PublicOnlyRoute />}>
+                        <Route
+                            path="/login"
+                            element={<LoginPage />}
+                        />
+                    </Route>
+
                     <Route element={<CustomerLayout />}>
                         <Route
                             path="/"
@@ -64,13 +88,6 @@ export function AppRouter() {
                             element={<MenuPage />}
                         />
 
-                        <Route element={<PublicOnlyRoute />}>
-                            <Route
-                                path="/login"
-                                element={<LoginPage />}
-                            />
-                        </Route>
-
                         <Route element={<ProtectedRoute />}>
                             <Route
                                 path="/orders"
@@ -81,10 +98,16 @@ export function AppRouter() {
                                 path="/cart"
                                 element={<CartPage />}
                             />
+
                             <Route
                                 path="/checkout"
                                 element={<CheckoutPage />}
                             />
+
+                            <Route
+    path="/profile"
+    element={<ProfilePage />}
+/>
                         </Route>
                     </Route>
 

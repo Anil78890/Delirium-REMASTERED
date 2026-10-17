@@ -20,7 +20,30 @@ model User {
   cart      Cart?
   orders    Order[]
   sessions  Session[]
+  addresses Address[]
 }
+
+
+
+model Address {
+  id           String   @id @default(uuid())
+  userId       String
+  label        String   // e.g. Home, Work
+  recipientName String
+  phoneNumber  String
+  addressLine  String
+  latitude     Float
+  longitude    Float
+  isDefault    Boolean  @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 
 model Session {
   id               String    @id @default(uuid())
@@ -91,6 +114,8 @@ model CartItem {
 model Order {
   id              String      @id @default(uuid())
   userId          String
+  phoneNumber     String?
+  deliveryAddress String?
   status          OrderStatus @default(PENDING)
   subtotalInPaise Int
   totalInPaise    Int
