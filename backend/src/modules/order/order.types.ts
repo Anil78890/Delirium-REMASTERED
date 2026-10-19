@@ -7,12 +7,16 @@ export interface CreateOrderItemData {
     unitPriceInPaise: number;
 }
 
+
 export interface CreateOrderData {
     userId: string;
+    phoneNumber: string;
+    deliveryAddress: string;
     subtotalInPaise: number;
     totalInPaise: number;
     items: CreateOrderItemData[];
 }
+
 
 export interface UpdateOrderStatusData {
     status: OrderStatus;

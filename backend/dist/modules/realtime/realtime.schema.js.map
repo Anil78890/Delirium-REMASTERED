@@ -1,0 +1,1 @@
+{"version":3,"file":"realtime.schema.js","sourceRoot":"","sources":["../../../src/modules/realtime/realtime.schema.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,CAAC,EAAE,MAAM,KAAK,CAAC;AAExB,MAAM,CAAC,MAAM,6BAA6B,GAAG,CAAC,CAAC,MAAM,CAAC;IAClD,OAAO,EAAE,CAAC,CAAC,MAAM,EAAE;IACnB,cAAc,EAAE,CAAC,CAAC,MAAM,EAAE;IAC1B,SAAS,EAAE,CAAC,CAAC,MAAM,EAAE;CACxB,CAAC,CAAC"}

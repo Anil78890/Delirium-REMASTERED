@@ -35,7 +35,7 @@ router.post(
 router.patch(
     "/:id/status",
     requireAuth,
-    requireRole("ADMIN"),
+    //requireRole("ADMIN"),
     updateOrderStatus,
 );
 

@@ -1,0 +1,75 @@
+@import "./styles/tokens.css";
+@import "./styles/customer-header.css";
+@import "./styles/hero.css";
+@import "./styles/featured-section.css";
+@import "./styles/category-navigation.css";
+@import "./styles/menu-item-card.css";
+@import "./styles/menu-item-list.css";
+@import "./styles/menu-section.css";
+@import "./styles/about-section.css";
+@import "./styles/customer-footer.css";
+@import "./styles/category-showcase.css";
+@import "./styles/popular-cravings.css";
+@import "./styles/final-cta.css";
+@import "./styles/cart-page.css";
+@import "./styles/checkout-page.css";
+@import "./styles/orders-page.css";
+@import "./styles/login.css";
+@import "./styles/profile-page.css";
+@import "./styles/DeliveryLocationMap.css";
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+html,
+body,
+#root {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    background: var(--color-background);
+    color: var(--color-text);
+
+    font-family: var(--font-body);
+    line-height: 1.5;
+
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+}
+
+a {
+    color: inherit;
+}
+
+::selection {
+    background: var(--color-accent);
+    color: var(--color-ink);
+}
+
+:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 3px;
+}

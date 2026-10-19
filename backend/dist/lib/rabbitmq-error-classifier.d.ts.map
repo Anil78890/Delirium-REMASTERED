@@ -1,0 +1,1 @@
+{"version":3,"file":"rabbitmq-error-classifier.d.ts","sourceRoot":"","sources":["../../src/lib/rabbitmq-error-classifier.ts"],"names":[],"mappings":"AAGA,MAAM,MAAM,iBAAiB,GACvB,WAAW,GACX,WAAW,CAAC;AAElB,wBAAgB,qBAAqB,CACjC,KAAK,EAAE,OAAO,GACf,iBAAiB,CAcnB"}

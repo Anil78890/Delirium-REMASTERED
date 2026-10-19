@@ -28,3 +28,4 @@ export type UpdateMenuItemInput = {
     isActive?: boolean | undefined;
     isAvailable?: boolean | undefined;
 };
+

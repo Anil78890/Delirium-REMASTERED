@@ -27,7 +27,6 @@ const router = Router();
 
 router.get(
     "/categories",
-    requireAuth,
     listCategories,
 );
 
@@ -70,13 +69,11 @@ router.delete(
 
 router.get(
     "/",
-    requireAuth,
     listMenuItems,
 );
 
 router.get(
     "/:id",
-    requireAuth,
     getMenuItem,
 );
 

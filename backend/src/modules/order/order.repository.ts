@@ -20,6 +20,8 @@ export const orderRepository = {
         return db.order.create({
             data: {
                 userId: data.userId,
+                phoneNumber: data.phoneNumber,
+                deliveryAddress: data.deliveryAddress,
                 subtotalInPaise: data.subtotalInPaise,
                 totalInPaise: data.totalInPaise,
 

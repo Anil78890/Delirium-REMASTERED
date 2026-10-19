@@ -1,9 +1,9 @@
 import { prisma } from "../../config/prisma.js";
 
-type CreateUserData = {
+type CreateGoogleUserData = {
     name: string;
     email: string;
-    passwordHash: string;
+    googleId: string;
 };
 
 type CreateSessionData = {
@@ -21,17 +21,24 @@ type RotateSessionData = {
 };
 
 export const authRepository = {
-    findUserByEmail(email: string) {
+   
+    findUserByGoogleId(googleId: string) {
         return prisma.user.findUnique({
             where: {
-                email,
+                googleId,
             },
         });
     },
 
-    createUser(data: CreateUserData) {
+
+    createGoogleUser(data: CreateGoogleUserData) {
         return prisma.user.create({
-            data,
+            data: {
+                name: data.name,
+                email: data.email,
+                googleId: data.googleId,
+                role: "CUSTOMER",
+            },
             select: {
                 id: true,
                 name: true,
@@ -49,20 +56,20 @@ export const authRepository = {
     },
 
     findSessionById(sessionId: string) {
-    return prisma.session.findUnique({
-        where: {
-            id: sessionId,
-        },
-        include: {
-            user: {
-                select: {
-                    id: true,
-                    role: true,
+        return prisma.session.findUnique({
+            where: {
+                id: sessionId,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        role: true,
+                    },
                 },
             },
-        },
-    });
-},
+        });
+    },
 
     rotateSession(data: RotateSessionData) {
         return prisma.session.updateMany({
@@ -89,34 +96,30 @@ export const authRepository = {
         });
     },
 
-
     revokeAllSessions(userId: string) {
-    return prisma.session.updateMany({
-        where: {
-            userId,
-            revokedAt: null,
-        },
-        data: {
-            revokedAt: new Date(),
-        },
-    });
-},
+        return prisma.session.updateMany({
+            where: {
+                userId,
+                revokedAt: null,
+            },
+            data: {
+                revokedAt: new Date(),
+            },
+        });
+    },
 
-
-findUserById(userId: string) {
-    return prisma.user.findUnique({
-        where: {
-            id: userId,
-        },
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            createdAt: true,
-        },
-    });
-},
-
-
+    findUserById(userId: string) {
+        return prisma.user.findUnique({
+            where: {
+                id: userId,
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true,
+            },
+        });
+    },
 };

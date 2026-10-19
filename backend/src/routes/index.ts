@@ -6,8 +6,11 @@ import cartRoutes from "../modules/cart/cart.routes.js";
 import orderRoutes from "../modules/order/order.routes.js";
 import adminOrderRoutes from "../modules/order/admin-order.routes.js";
 import paymentRoutes from "../modules/payment/payment.routes.js";
+import addressRoutes from "../modules/address/address.routes.js";
 
 const router = Router();
+
+router.use("/addresses", addressRoutes);
 
 router.use("/auth", authRoutes);
 

@@ -1,0 +1,458 @@
+
+/* ===== Profile page ===== */
+
+.profile-page {
+    --profile-ink: #29231f;
+    --profile-muted: #81766e;
+    --profile-accent: #a84f32;
+    --profile-accent-dark: #873b24;
+    --profile-border: #e9dfd5;
+    --profile-surface: #ffffff;
+    --profile-cream: #fbf6ee;
+
+    width: min(100% - 40px, 1000px);
+    margin: 0 auto;
+    padding: 52px 0 80px;
+    color: var(--profile-ink);
+}
+
+.profile-page * {
+    box-sizing: border-box;
+}
+
+.profile-header {
+    margin-bottom: 34px;
+}
+
+.profile-eyebrow {
+    margin: 0 0 10px;
+    color: var(--profile-accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+}
+
+.profile-header h1 {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(34px, 5vw, 48px);
+    font-weight: 500;
+    letter-spacing: -1.2px;
+}
+
+.profile-header > p:last-child {
+    margin: 12px 0 0;
+    color: var(--profile-muted);
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+/* ===== Sections ===== */
+
+.profile-section {
+    margin-bottom: 28px;
+    padding: clamp(22px, 4vw, 34px);
+    border: 1px solid var(--profile-border);
+    border-radius: 18px;
+    background: var(--profile-surface);
+    box-shadow: 0 8px 28px rgb(66 43 27 / 4%);
+}
+
+.profile-section > h2 {
+    margin: 0 0 26px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 25px;
+    font-weight: 500;
+    letter-spacing: -0.4px;
+}
+
+/* ===== Address form ===== */
+
+.address-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 20px;
+}
+
+.address-form > label {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+    min-width: 0;
+    color: var(--profile-ink);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.address-form > label:has(textarea),
+.address-form .location-control,
+.address-form .default-checkbox,
+.address-form .profile-error,
+.address-form .profile-message,
+.address-form .form-actions {
+    grid-column: 1 / -1;
+}
+
+.address-form input:not([type="checkbox"]),
+.address-form select,
+.address-form textarea {
+    width: 100%;
+    min-width: 0;
+    padding: 13px 14px;
+    border: 1px solid #e2d8ce;
+    border-radius: 9px;
+    outline: none;
+    background: #fffdfb;
+    color: var(--profile-ink);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.address-form input:not([type="checkbox"]),
+.address-form select {
+    min-height: 47px;
+}
+
+.address-form textarea {
+    min-height: 110px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.address-form input:focus,
+.address-form select:focus,
+.address-form textarea:focus {
+    border-color: var(--profile-accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgb(168 79 50 / 10%);
+}
+
+.address-form input::placeholder,
+.address-form textarea::placeholder {
+    color: #a49a92;
+}
+
+/* ===== Location ===== */
+
+.location-control {
+    padding: 19px;
+    border: 1px solid var(--profile-border);
+    border-radius: 12px;
+    background: var(--profile-cream);
+}
+
+.location-control > p {
+    margin: 10px 0 0;
+    color: var(--profile-muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.location-control .location-coordinates {
+    overflow-wrap: anywhere;
+    color: var(--profile-ink);
+    font-size: 12px;
+}
+
+.secondary-button,
+.primary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 11px 17px;
+    border-radius: 9px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.secondary-button {
+    border: 1px solid #d9c8b9;
+    background: #fff;
+    color: var(--profile-ink);
+}
+
+.secondary-button:hover:not(:disabled) {
+    border-color: var(--profile-accent);
+    background: #fffaf5;
+}
+
+.primary-button {
+    border: 1px solid var(--profile-accent);
+    background: var(--profile-accent);
+    color: #fff;
+}
+
+.primary-button:hover:not(:disabled) {
+    border-color: var(--profile-accent-dark);
+    background: var(--profile-accent-dark);
+    transform: translateY(-1px);
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ===== Default checkbox ===== */
+
+.address-form .default-checkbox {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    padding: 15px;
+    border: 1px solid var(--profile-border);
+    border-radius: 10px;
+    background: #fffdfb;
+    cursor: pointer;
+    text-align: left;
+}
+
+.address-form .default-checkbox input[type="checkbox"] {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    margin: 2px 0 0;
+    accent-color: var(--profile-accent);
+    cursor: pointer;
+}
+
+.address-form .default-checkbox span {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.address-form .default-checkbox strong {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.address-form .default-checkbox small {
+    color: var(--profile-muted);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.6;
+}
+
+/* ===== Feedback and form actions ===== */
+
+.profile-error,
+.profile-message {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 9px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.profile-error {
+    border: 1px solid #f0c9c4;
+    background: #fff4f2;
+    color: #a52d24;
+}
+
+.profile-message {
+    border: 1px solid #cce5d3;
+    background: #f1faf3;
+    color: #276a3a;
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding-top: 3px;
+}
+
+/* ===== Saved address cards ===== */
+
+.saved-address-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.saved-address-card {
+    min-width: 0;
+    padding: 22px;
+    border: 1px solid var(--profile-border);
+    border-radius: 13px;
+    background: #fffdfb;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.saved-address-card:hover {
+    border-color: #d7b6a2;
+    box-shadow: 0 8px 22px rgb(66 43 27 / 6%);
+    transform: translateY(-2px);
+}
+
+.saved-address-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.saved-address-heading h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.default-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 100px;
+    background: #f5e6dc;
+    color: var(--profile-accent-dark);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.saved-address-card > p {
+    margin: 7px 0;
+    color: var(--profile-muted);
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+.saved-address-card > .address-recipient {
+    color: var(--profile-ink);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.address-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--profile-border);
+}
+
+.text-button {
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+    color: var(--profile-accent);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.text-button:hover {
+    text-decoration: underline;
+}
+
+.text-button.danger-button {
+    color: #b83d32;
+}
+
+.empty-addresses {
+    margin: 0;
+    padding: 28px 18px;
+    border: 1px dashed #d9c8b9;
+    border-radius: 12px;
+    color: var(--profile-muted);
+    font-size: 14px;
+    line-height: 1.7;
+    text-align: center;
+}
+
+/* ===== Responsive layout ===== */
+
+@media (max-width: 680px) {
+    .profile-page {
+        width: min(100% - 28px, 1000px);
+        padding: 32px 0 48px;
+    }
+
+    .profile-header {
+        margin-bottom: 25px;
+    }
+
+    .profile-section {
+        margin-bottom: 20px;
+        padding: 20px 16px;
+        border-radius: 14px;
+    }
+
+    .profile-section > h2 {
+        margin-bottom: 21px;
+        font-size: 22px;
+    }
+
+    .address-form {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 19px;
+    }
+
+    .address-form > label,
+    .address-form > label:has(textarea),
+    .address-form .location-control,
+    .address-form .default-checkbox,
+    .address-form .profile-error,
+    .address-form .profile-message,
+    .address-form .form-actions {
+        grid-column: 1;
+    }
+
+    .saved-address-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .saved-address-card {
+        padding: 18px;
+    }
+
+    .form-actions > button {
+        flex: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .saved-address-card,
+    .primary-button,
+    .secondary-button,
+    .address-form input,
+    .address-form select,
+    .address-form textarea {
+        transition: none;
+    }
+
+    .saved-address-card:hover,
+    .primary-button:hover:not(:disabled) {
+        transform: none;
+    }
+}

@@ -1,0 +1,228 @@
+.menu-item-card {
+    position: relative;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(36, 21, 16, 0.08);
+    border-radius: 28px;
+
+    background: var(--color-white);
+
+    box-shadow: 0 6px 22px rgba(36, 21, 16, 0.04);
+
+    transition:
+        transform var(--duration-normal) var(--ease-standard),
+        box-shadow var(--duration-normal) var(--ease-standard),
+        border-color var(--duration-normal) var(--ease-standard);
+}
+
+.menu-item-card:hover {
+    transform: translateY(-6px);
+
+    border-color: rgba(36, 21, 16, 0.14);
+
+    box-shadow: 0 22px 45px rgba(36, 21, 16, 0.11);
+}
+
+.menu-item-card--unavailable {
+    opacity: 0.58;
+}
+
+.menu-item-card__image-wrapper {
+    position: relative;
+
+    width: 100%;
+    aspect-ratio: 4 / 3;
+
+    overflow: hidden;
+
+    background: var(--color-cream-deep);
+}
+
+.menu-item-card__image-wrapper::after {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        to top,
+        rgba(36, 21, 16, 0.12),
+        transparent 35%
+    );
+
+    pointer-events: none;
+}
+
+.menu-item-card__image {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    transition:
+        transform 600ms var(--ease-standard);
+}
+
+.menu-item-card:hover .menu-item-card__image {
+    transform: scale(1.055);
+}
+
+.menu-item-card__image-placeholder {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--color-ink-soft);
+
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+}
+
+.menu-item-card__status {
+    position: absolute;
+    z-index: 2;
+
+    top: 14px;
+    left: 14px;
+
+    padding: 0.45rem 0.7rem;
+
+    border-radius: 999px;
+
+    background: var(--color-ink);
+    color: var(--color-cream);
+
+    font-size: 0.63rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+}
+
+.menu-item-card__content {
+    padding: 1.25rem 1.25rem 1.35rem;
+}
+
+.menu-item-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: var(--space-3);
+}
+
+.menu-item-card__top h3 {
+    min-width: 0;
+
+    margin: 0;
+
+    font-family: var(--font-display);
+
+    font-size: clamp(1.2rem, 1.7vw, 1.4rem);
+    font-weight: 900;
+
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+}
+
+.menu-item-card__price {
+    flex-shrink: 0;
+
+    padding-top: 0.15rem;
+
+    color: var(--color-accent-dark);
+
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+
+.menu-item-card__description {
+    margin: 0.8rem 0 0;
+
+    color: var(--color-text-muted);
+
+    font-size: 0.84rem;
+    line-height: 1.6;
+}
+
+.menu-item-card__add {
+    width: 100%;
+
+    margin-top: 1.25rem;
+
+    padding: 0.8rem 1rem;
+
+    border: 1px solid var(--color-ink);
+    border-radius: 999px;
+
+    background: var(--color-ink);
+    color: var(--color-cream);
+
+    font-size: 0.73rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+
+    cursor: pointer;
+
+    transition:
+        background var(--duration-fast) var(--ease-standard),
+        color var(--duration-fast) var(--ease-standard),
+        transform var(--duration-fast) var(--ease-standard);
+}
+
+.menu-item-card__add:hover:not(:disabled) {
+    transform: translateY(-2px);
+
+    background: var(--color-accent);
+    color: var(--color-ink);
+
+    border-color: var(--color-accent);
+}
+
+.menu-item-card__add:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.menu-item-card__add:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.menu-item-card--selected {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 4px;
+
+    scroll-margin-top: 120px;
+}
+
+@media (max-width: 640px) {
+    .menu-item-card {
+        border-radius: 24px;
+    }
+
+    .menu-item-card__image-wrapper {
+        aspect-ratio: 16 / 10;
+    }
+
+    .menu-item-card__content {
+        padding: 1.15rem;
+    }
+
+    .menu-item-card__top h3 {
+        font-size: 1.25rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .menu-item-card,
+    .menu-item-card__image,
+    .menu-item-card__add {
+        transition: none;
+    }
+}

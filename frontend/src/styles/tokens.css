@@ -1,0 +1,119 @@
+:root {
+    /* --------------------------------
+       Brand
+    -------------------------------- */
+
+    --color-ink: #241510;
+    --color-ink-soft: #5a4035;
+
+    --color-cream: #fff8e9;
+    --color-cream-deep: #f3e4c9;
+    --color-cream-soft: #fffaf0;
+
+    --color-accent: #f28c28;
+    --color-accent-dark: #d96f12;
+    --color-accent-soft: #f9c27d;
+
+    --color-white: #ffffff;
+
+
+    /* --------------------------------
+       Semantic
+    -------------------------------- */
+
+    --color-background: var(--color-cream);
+    --color-surface: var(--color-white);
+    --color-surface-soft: var(--color-cream-soft);
+
+    --color-text: var(--color-ink);
+    --color-text-muted: var(--color-ink-soft);
+
+    --color-border: rgba(36, 21, 16, 0.12);
+    --color-border-strong: rgba(36, 21, 16, 0.2);
+
+
+    /* --------------------------------
+       Typography
+    -------------------------------- */
+
+    --font-body:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    --font-display:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+
+    /* --------------------------------
+       Spacing
+    -------------------------------- */
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-7: 3rem;
+    --space-8: 4rem;
+    --space-9: 6rem;
+    --space-10: 8rem;
+
+
+    /* --------------------------------
+       Layout
+    -------------------------------- */
+
+    --content-width: 1200px;
+    --page-padding: 1.25rem;
+
+
+    /* --------------------------------
+       Radius
+    -------------------------------- */
+
+    --radius-sm: 10px;
+    --radius-md: 18px;
+    --radius-lg: 28px;
+    --radius-xl: 36px;
+    --radius-pill: 999px;
+
+
+    /* --------------------------------
+       Borders
+    -------------------------------- */
+
+    --border-thin: 1px solid var(--color-border);
+    --border-strong: 1px solid var(--color-border-strong);
+
+
+    /* --------------------------------
+       Shadows
+    -------------------------------- */
+
+    --shadow-soft:
+        0 8px 24px rgba(36, 21, 16, 0.06);
+
+    --shadow-card:
+        0 14px 35px rgba(36, 21, 16, 0.08);
+
+    --shadow-card-hover:
+        0 24px 50px rgba(36, 21, 16, 0.12);
+
+
+    /* --------------------------------
+       Motion
+    -------------------------------- */
+
+    --duration-fast: 160ms;
+    --duration-normal: 280ms;
+
+    --ease-standard:
+        cubic-bezier(0.2, 0.8, 0.2, 1);
+}

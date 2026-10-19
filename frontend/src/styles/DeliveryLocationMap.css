@@ -1,0 +1,131 @@
+
+.delivery-map {
+    display: grid;
+    gap: 16px;
+    width: 100%;
+}
+
+.delivery-map__heading h3 {
+    margin: 0 0 6px;
+    color: var(--color-ink, #30221c);
+    font-size: 1.15rem;
+}
+
+.delivery-map__heading p {
+    margin: 0;
+    color: var(--color-muted, #76665d);
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.delivery-map__search {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.delivery-map__search input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid #ded5ce;
+    border-radius: 10px;
+    background: #fff;
+    color: var(--color-ink, #30221c);
+    font: inherit;
+}
+
+.delivery-map__search input:focus {
+    outline: 2px solid #e7a16e;
+    outline-offset: 1px;
+}
+
+.delivery-map__search button {
+    flex-shrink: 0;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 10px;
+    background: var(--color-accent, #d96b32);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.delivery-map__search button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.delivery-map__canvas {
+    height: 360px;
+    overflow: hidden;
+    border: 1px solid #ded5ce;
+    border-radius: 14px;
+    background: #f4eee8;
+}
+
+.delivery-map__leaflet {
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.delivery-map-marker-wrapper {
+    background: transparent;
+    border: none;
+}
+
+.delivery-map-marker {
+    width: 20px;
+    height: 20px;
+    border: 4px solid #fff;
+    border-radius: 50%;
+    background: #d96b32;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 35%);
+}
+
+.delivery-map__result {
+    padding: 14px;
+    border: 1px solid #e8ded5;
+    border-radius: 12px;
+    background: #faf6f1;
+    color: var(--color-ink, #30221c);
+    overflow-wrap: anywhere;
+}
+
+.delivery-map__result strong {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.delivery-map__result p {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.delivery-map__result small {
+    display: block;
+    margin-top: 8px;
+    color: var(--color-muted, #76665d);
+}
+
+.delivery-map__result .delivery-map__error {
+    margin-top: 8px;
+    color: #b42318;
+}
+
+@media (max-width: 600px) {
+    .delivery-map__search {
+        flex-direction: column;
+    }
+
+    .delivery-map__search button {
+        width: 100%;
+    }
+
+    .delivery-map__canvas {
+        height: 300px;
+    }
+}

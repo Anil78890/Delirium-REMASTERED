@@ -8,17 +8,42 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(uuid())
-  email        String    @unique
-  passwordHash String
-  name         String
-  role         UserRole  @default(CUSTOMER)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  cart         Cart?
-  order        Order[]
-  sessions     Session[]
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  googleId  String   @unique
+  role      UserRole @default(CUSTOMER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart      Cart?
+  orders    Order[]
+  sessions  Session[]
+  addresses Address[]
 }
+
+
+
+model Address {
+  id           String   @id @default(uuid())
+  userId       String
+  label        String   // e.g. Home, Work
+  recipientName String
+  phoneNumber  String
+  addressLine  String
+  latitude     Float
+  longitude    Float
+  isDefault    Boolean  @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 
 model Session {
   id               String    @id @default(uuid())
@@ -89,6 +114,8 @@ model CartItem {
 model Order {
   id              String      @id @default(uuid())
   userId          String
+  phoneNumber     String?
+  deliveryAddress String?
   status          OrderStatus @default(PENDING)
   subtotalInPaise Int
   totalInPaise    Int
@@ -150,7 +177,6 @@ model PaymentAttempt {
   @@index([paymentId])
   @@index([status])
 }
-
 
 model OutboxEvent {
   id            String            @id @default(uuid())

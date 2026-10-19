@@ -6,13 +6,22 @@ import { requestIdMiddleware } from "./middlewares/requestId.middleware.js";
 import { requestLoggerMiddleware } from "./middlewares/requestLogger.middleware.js";
 import cors from "cors";
 import { apiRateLimiter } from "./middlewares/rateLimit.middleware.js";
+import cookieParser from "cookie-parser";
+import { env } from "./config/env.js";
 
 
 const app = express();
 
+app.use(cookieParser());
+
 app.use(requestIdMiddleware); // build context for logs which needs to associated with an particular request.
 app.use(requestLoggerMiddleware); // automatic logging for req-res lifecycle.
-app.use(cors());
+app.use(
+    cors({
+        origin: env.FRONTEND_URL,
+        credentials: true,
+    }),
+);
 
 
 app.use("/api/v1/webhooks", webhookRouter);
